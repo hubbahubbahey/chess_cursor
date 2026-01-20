@@ -1,0 +1,275 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: linear-gradient(145deg, #0f0d0b 0%, #1a1714 50%, #0f0d0b 100%);
+  color: #e8e4e0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1714;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3d3733;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a4440;
+}
+
+/* Drag region for titlebar */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* Chess board customization */
+.chess-board-container {
+  background: linear-gradient(145deg, #252220 0%, #1a1714 100%);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  position: relative;
+  z-index: 10;
+  isolation: isolate;
+}
+
+/* Resize handle */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(212, 165, 74, 0.3) 40%, rgba(212, 165, 74, 0.3) 45%, transparent 45%, transparent 60%, rgba(212, 165, 74, 0.3) 60%, rgba(212, 165, 74, 0.3) 65%, transparent 65%);
+  border-bottom-right-radius: 12px;
+  transition: background 0.2s ease;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.resize-handle:hover {
+  background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(212, 165, 74, 0.6) 40%, rgba(212, 165, 74, 0.6) 45%, transparent 45%, transparent 60%, rgba(212, 165, 74, 0.6) 60%, rgba(212, 165, 74, 0.6) 65%, transparent 65%);
+}
+
+/* Piece highlighting */
+.highlight-move {
+  background: radial-gradient(circle, rgba(247, 236, 94, 0.4) 0%, transparent 70%);
+}
+
+.highlight-correct {
+  animation: correctPulse 0.5s ease-out;
+}
+
+.highlight-incorrect {
+  animation: incorrectShake 0.4s ease-out;
+}
+
+@keyframes correctPulse {
+  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+  70% { box-shadow: 0 0 0 20px rgba(74, 222, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+
+@keyframes incorrectShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+/* Card animations */
+.card-enter {
+  animation: cardEnter 0.3s ease-out;
+}
+
+@keyframes cardEnter {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Tree node styling */
+.tree-node {
+  transition: all 0.2s ease;
+}
+
+.tree-node:hover {
+  background: rgba(212, 165, 74, 0.1);
+}
+
+.tree-node.active {
+  background: rgba(212, 165, 74, 0.2);
+  border-left: 3px solid #d4a54a;
+}
+
+/* Button styles */
+.btn-primary {
+  @apply px-4 py-2 bg-accent-gold text-surface-900 font-medium rounded-lg 
+         hover:bg-opacity-90 transition-all duration-200 
+         active:scale-95 shadow-md;
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-surface-600 text-white font-medium rounded-lg 
+         hover:bg-surface-500 transition-all duration-200 
+         active:scale-95;
+}
+
+.btn-ghost {
+  @apply px-4 py-2 text-gray-300 font-medium rounded-lg 
+         hover:bg-surface-600 transition-all duration-200;
+}
+
+/* Badge styles */
+.badge {
+  @apply px-2 py-0.5 text-xs font-medium rounded-full;
+}
+
+.badge-gold {
+  @apply bg-accent-gold/20 text-accent-gold;
+}
+
+.badge-emerald {
+  @apply bg-accent-emerald/20 text-accent-emerald;
+}
+
+.badge-ruby {
+  @apply bg-accent-ruby/20 text-accent-ruby;
+}
+
+/* Tooltip */
+.tooltip {
+  @apply absolute z-50 px-2 py-1 text-sm bg-surface-700 text-white rounded shadow-lg
+         opacity-0 invisible transition-all duration-200;
+}
+
+.tooltip-trigger:hover .tooltip {
+  @apply opacity-100 visible;
+}
+
+/* Progress bar */
+.progress-bar {
+  @apply h-2 bg-surface-700 rounded-full overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full bg-gradient-to-r from-accent-gold to-accent-copper transition-all duration-500;
+}
+
+/* Coach markdown styles */
+.coach-markdown {
+  word-break: break-word;
+}
+
+.coach-markdown > *:first-child {
+  margin-top: 0 !important;
+}
+
+.coach-markdown > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.coach-markdown ul ul,
+.coach-markdown ol ol,
+.coach-markdown ul ol,
+.coach-markdown ol ul {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.coach-markdown p + ul,
+.coach-markdown p + ol {
+  margin-top: -0.5rem;
+}
+
+/* Chess notation styling in coach */
+.coach-markdown code {
+  white-space: nowrap;
+}
+
+/* Utility classes for consistent spacing and constraints */
+.scrollable-panel {
+  @apply overflow-auto;
+  scrollbar-width: thin;
+  scrollbar-color: #3d3733 #1a1714;
+}
+
+.scrollable-panel::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollable-panel::-webkit-scrollbar-track {
+  background: #1a1714;
+  border-radius: 4px;
+}
+
+.scrollable-panel::-webkit-scrollbar-thumb {
+  background: #3d3733;
+  border-radius: 4px;
+}
+
+.scrollable-panel::-webkit-scrollbar-thumb:hover {
+  background: #4a4440;
+}
+
+/* Max height utilities for panels */
+.panel-max-h {
+  max-height: 60vh;
+}
+
+.panel-max-h-sm {
+  max-height: 40vh;
+}
+
+.panel-max-h-lg {
+  max-height: 80vh;
+}
+
+/* Consistent spacing utilities */
+.content-spacing {
+  @apply space-y-4;
+}
+
+.content-spacing-sm {
+  @apply space-y-2;
+}
+
+.content-spacing-lg {
+  @apply space-y-6;
+}
+
+/* Text spacing improvements */
+.text-relaxed {
+  line-height: 1.75;
+}
+
+.text-comfortable {
+  line-height: 1.6;
+}
