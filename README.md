@@ -5,6 +5,7 @@ An interactive desktop application for mastering chess openings through spaced r
 ## Features
 
 ### 📚 Explore Mode
+
 - Interactive chessboard with drag-and-drop piece movement
 - Visual opening tree showing all variations
 - Structured coaching notes for each move (concepts, insights, common mistakes)
@@ -13,24 +14,28 @@ An interactive desktop application for mastering chess openings through spaced r
 - **LLM Coach** (optional) – Chat with a local model via [LM Studio](https://lmstudio.ai/) for position analysis, move suggestions, mistake review, and strategic plans
 
 ### 🎓 Training Mode (Spaced Repetition)
+
 - SM-2 algorithm for optimal review scheduling
 - Track individual positions with ease factor and intervals
 - Difficulty rating after each attempt (Again/Hard/Good/Easy)
 - Session statistics and streak tracking
 
 ### ❓ Quiz Mode
+
 - Random position testing from your opening
 - Multiple attempts with hints
 - Score tracking and accuracy statistics
 - Skip option for difficult positions
 
 ### 📊 Statistics
+
 - Mastery breakdown (New/Learning/Reviewing/Mastered)
 - Per-position accuracy tracking
 - Visual progress indicators
 - Historical data on training sessions
 
 ### 🎯 Built-in Openings
+
 - **King's Pawn** (1.e4) – Direct central control
 - **Queen's Pawn** (1.d4) – Flexible, solid development
 - **London System** (1.d4 2.Bf4) – Simple, reliable setup
@@ -53,6 +58,7 @@ Data is stored as JSON in the Electron user data directory.
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 
@@ -76,11 +82,11 @@ For the **LLM Coach**, install [LM Studio](https://lmstudio.ai/), load a model, 
 
 ## Keyboard Shortcuts
 
-| Key | Action |
-|-----|--------|
-| ← | Go back one move |
-| F | Flip board |
-| R | Reset to starting position |
+| Key | Action                     |
+| --- | -------------------------- |
+| ←   | Go back one move           |
+| F   | Flip board                 |
+| R   | Reset to starting position |
 
 ## Project Structure
 
@@ -117,6 +123,7 @@ The training system uses the SuperMemo 2 algorithm to schedule reviews:
 ### Position Tracking
 
 Each position in the opening is tracked independently:
+
 - FEN (board position)
 - Parent position (for tree structure)
 - Move in SAN notation

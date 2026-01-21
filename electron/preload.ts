@@ -8,30 +8,47 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPosition: (id: number) => ipcRenderer.invoke('db:getPosition', id),
   getPositionByFen: (fen: string) => ipcRenderer.invoke('db:getPositionByFen', fen),
   getChildPositions: (parentId: number) => ipcRenderer.invoke('db:getChildPositions', parentId),
-  
+
   // Openings
   getOpenings: () => ipcRenderer.invoke('db:getOpenings'),
-  
+
   // Reviews (Spaced Repetition)
   getReview: (positionId: number) => ipcRenderer.invoke('db:getReview', positionId),
   getDueReviews: (openingId?: number) => ipcRenderer.invoke('db:getDueReviews', openingId),
-  updateReview: (positionId: number, easeFactor: number, interval: number, repetitions: number, nextReview: string) => 
-    ipcRenderer.invoke('db:updateReview', positionId, easeFactor, interval, repetitions, nextReview),
-  
+  updateReview: (
+    positionId: number,
+    easeFactor: number,
+    interval: number,
+    repetitions: number,
+    nextReview: string
+  ) =>
+    ipcRenderer.invoke(
+      'db:updateReview',
+      positionId,
+      easeFactor,
+      interval,
+      repetitions,
+      nextReview
+    ),
+
   // Stats
   getStats: (positionId: number) => ipcRenderer.invoke('db:getStats', positionId),
-  updateStats: (positionId: number, correct: boolean) => ipcRenderer.invoke('db:updateStats', positionId, correct),
+  updateStats: (positionId: number, correct: boolean) =>
+    ipcRenderer.invoke('db:updateStats', positionId, correct),
   getAllStats: () => ipcRenderer.invoke('db:getAllStats'),
 
   // AI Coach (LLM)
   coachChat: (messages: CoachChatMessage[]) => ipcRenderer.invoke('llm:chat', messages),
   checkCoachStatus: () => ipcRenderer.invoke('llm:checkStatus'),
   getCoachSettings: () => ipcRenderer.invoke('llm:getSettings'),
-  saveCoachSettings: (settings: Partial<CoachSettings>) => ipcRenderer.invoke('llm:saveSettings', settings),
-  buildCoachPrompt: (analysisType: string, context: CoachContext) => ipcRenderer.invoke('llm:buildPrompt', analysisType, context),
-  
+  saveCoachSettings: (settings: Partial<CoachSettings>) =>
+    ipcRenderer.invoke('llm:saveSettings', settings),
+  buildCoachPrompt: (analysisType: string, context: CoachContext) =>
+    ipcRenderer.invoke('llm:buildPrompt', analysisType, context),
+
   // Stockfish Analysis
-  analyzePosition: (fen: string, depth?: number) => ipcRenderer.invoke('stockfish:analyze', fen, depth)
+  analyzePosition: (fen: string, depth?: number) =>
+    ipcRenderer.invoke('stockfish:analyze', fen, depth)
 })
 
 // Coach-related types
@@ -74,7 +91,13 @@ export interface ElectronAPI {
   getOpenings: () => Promise<Opening[]>
   getReview: (positionId: number) => Promise<Review | undefined>
   getDueReviews: (openingId?: number) => Promise<ReviewWithPosition[]>
-  updateReview: (positionId: number, easeFactor: number, interval: number, repetitions: number, nextReview: string) => Promise<boolean>
+  updateReview: (
+    positionId: number,
+    easeFactor: number,
+    interval: number,
+    repetitions: number,
+    nextReview: string
+  ) => Promise<boolean>
   getStats: (positionId: number) => Promise<Stats | undefined>
   updateStats: (positionId: number, correct: boolean) => Promise<boolean>
   getAllStats: () => Promise<Stats[]>

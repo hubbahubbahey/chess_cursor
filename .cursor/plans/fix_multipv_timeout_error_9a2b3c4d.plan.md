@@ -46,9 +46,9 @@ Save a reference to the reject function before calling `stopCalculation()`, or r
 ```typescript
 moveTimeout = setTimeout(() => {
   if (topMovesReject === reject) {
-    const savedReject = topMovesReject  // Save reference
-    stopCalculation()  // This clears topMovesReject
-    savedReject(new Error('Move calculation timeout'))  // Use saved reference
+    const savedReject = topMovesReject // Save reference
+    stopCalculation() // This clears topMovesReject
+    savedReject(new Error('Move calculation timeout')) // Use saved reference
     topMovesResolve = null
     topMovesReject = null
     topMoves.clear()

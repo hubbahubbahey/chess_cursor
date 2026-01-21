@@ -8,12 +8,7 @@ interface MovePair {
 }
 
 export default function OpeningTree() {
-  const { 
-    positions, 
-    currentPosition, 
-    setCurrentPosition,
-    currentOpening 
-  } = useAppStore()
+  const { positions, currentPosition, setCurrentPosition, currentOpening } = useAppStore()
 
   // Flatten positions into move pairs for two-column display
   const { startingPosition, movePairs } = useMemo(() => {
@@ -23,7 +18,7 @@ export default function OpeningTree() {
     const childrenMap = new Map<number | null, Position[]>()
     let startPos: Position | null = null
 
-    positions.forEach(pos => {
+    positions.forEach((pos) => {
       if (pos.parent_id === null) {
         startPos = pos
       } else {
@@ -77,35 +72,35 @@ export default function OpeningTree() {
 
   return (
     <div className="scrollable-panel flex-1 min-h-0 p-4">
-        {/* Starting position row */}
-        <button
-          onClick={() => setCurrentPosition(startingPosition)}
-          className={`w-full text-left px-3 py-2 rounded-lg mb-2 transition-colors ${
-            currentPosition?.id === startingPosition.id
-              ? 'bg-accent-gold/20 text-accent-gold'
-              : 'text-gray-400 hover:bg-surface-700'
-          }`}
-        >
-          Starting Position
-        </button>
+      {/* Starting position row */}
+      <button
+        onClick={() => setCurrentPosition(startingPosition)}
+        className={`w-full text-left px-3 py-2 rounded-lg mb-2 transition-colors ${
+          currentPosition?.id === startingPosition.id
+            ? 'bg-accent-gold/20 text-accent-gold'
+            : 'text-gray-400 hover:bg-surface-700'
+        }`}
+      >
+        Starting Position
+      </button>
 
-        {/* Two-column move table */}
-        <div className="grid grid-cols-[auto_1fr_1fr] gap-x-2 gap-y-1">
-          {/* Header */}
-          <div className="text-xs text-gray-500 font-medium px-2 py-1">#</div>
-          <div className="text-xs text-gray-500 font-medium px-2 py-1">White</div>
-          <div className="text-xs text-gray-500 font-medium px-2 py-1">Black</div>
+      {/* Two-column move table */}
+      <div className="grid grid-cols-[auto_1fr_1fr] gap-x-2 gap-y-1">
+        {/* Header */}
+        <div className="text-xs text-gray-500 font-medium px-2 py-1">#</div>
+        <div className="text-xs text-gray-500 font-medium px-2 py-1">White</div>
+        <div className="text-xs text-gray-500 font-medium px-2 py-1">Black</div>
 
-          {/* Move rows */}
-          {movePairs.map(pair => (
-            <MoveRow
-              key={pair.moveNumber}
-              pair={pair}
-              currentPosition={currentPosition}
-              onSelect={setCurrentPosition}
-            />
-          ))}
-        </div>
+        {/* Move rows */}
+        {movePairs.map((pair) => (
+          <MoveRow
+            key={pair.moveNumber}
+            pair={pair}
+            currentPosition={currentPosition}
+            onSelect={setCurrentPosition}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -120,9 +115,7 @@ function MoveRow({ pair, currentPosition, onSelect }: MoveRowProps) {
   return (
     <>
       {/* Move number */}
-      <div className="text-xs text-gray-500 px-2 py-1.5 flex items-center">
-        {pair.moveNumber}.
-      </div>
+      <div className="text-xs text-gray-500 px-2 py-1.5 flex items-center">{pair.moveNumber}.</div>
 
       {/* White's move */}
       {pair.white ? (

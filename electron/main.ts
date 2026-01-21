@@ -102,10 +102,20 @@ ipcMain.handle('db:getDueReviews', async (_, openingId?: number) => {
   return getDueReviews(openingId)
 })
 
-ipcMain.handle('db:updateReview', async (_, positionId: number, easeFactor: number, interval: number, repetitions: number, nextReview: string) => {
-  updateReview(positionId, easeFactor, interval, repetitions, nextReview)
-  return true
-})
+ipcMain.handle(
+  'db:updateReview',
+  async (
+    _,
+    positionId: number,
+    easeFactor: number,
+    interval: number,
+    repetitions: number,
+    nextReview: string
+  ) => {
+    updateReview(positionId, easeFactor, interval, repetitions, nextReview)
+    return true
+  }
+)
 
 ipcMain.handle('db:getStats', async (_, positionId: number) => {
   return getStats(positionId) || null
@@ -137,20 +147,30 @@ ipcMain.handle('llm:saveSettings', async (_, settings: Partial<CoachSettings>) =
   return saveSettings(settings)
 })
 
-ipcMain.handle('llm:buildPrompt', async (_, analysisType: string, context: {
-  fen: string
-  moveHistory: string[]
-  playerColor?: 'white' | 'black'
-  openingName?: string
-  customQuestion?: string
-  stockfishAnalysis?: {
-    evalText: string
-    bestMove: string
-    bestMoveSan: string
+ipcMain.handle(
+  'llm:buildPrompt',
+  async (
+    _,
+    analysisType: string,
+    context: {
+      fen: string
+      moveHistory: string[]
+      playerColor?: 'white' | 'black'
+      openingName?: string
+      customQuestion?: string
+      stockfishAnalysis?: {
+        evalText: string
+        bestMove: string
+        bestMoveSan: string
+      }
+    }
+  ) => {
+    return buildCoachPrompt(
+      analysisType as 'position' | 'moves' | 'mistakes' | 'plan' | 'custom',
+      context
+    )
   }
-}) => {
-  return buildCoachPrompt(analysisType as 'position' | 'moves' | 'mistakes' | 'plan' | 'custom', context)
-})
+)
 
 // IPC handler for Stockfish analysis
 ipcMain.handle('stockfish:analyze', async (_, fen: string, depth?: number) => {

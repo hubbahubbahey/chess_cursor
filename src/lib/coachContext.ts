@@ -51,12 +51,14 @@ export function getGameStateDescription(fen: string): string {
 export function formatMoveHistory(moves: string[]): string {
   if (moves.length === 0) return 'No moves played yet'
 
-  return moves.reduce((acc, move, i) => {
-    if (i % 2 === 0) {
-      return acc + `${Math.floor(i / 2) + 1}. ${move} `
-    }
-    return acc + `${move} `
-  }, '').trim()
+  return moves
+    .reduce((acc, move, i) => {
+      if (i % 2 === 0) {
+        return acc + `${Math.floor(i / 2) + 1}. ${move} `
+      }
+      return acc + `${move} `
+    }, '')
+    .trim()
 }
 
 /**
@@ -64,8 +66,16 @@ export function formatMoveHistory(moves: string[]): string {
  */
 export function getMaterialCount(fen: string): { white: number; black: number } {
   const pieceValues: Record<string, number> = {
-    'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9,
-    'P': 1, 'N': 3, 'B': 3, 'R': 5, 'Q': 9
+    p: 1,
+    n: 3,
+    b: 3,
+    r: 5,
+    q: 9,
+    P: 1,
+    N: 3,
+    B: 3,
+    R: 5,
+    Q: 9
   }
 
   const position = fen.split(' ')[0]

@@ -7,6 +7,7 @@ This document provides a summary of tickets that need to be updated in your Jira
 ### Epic: AI Opponent & Engine Integration
 
 #### COT-203: Add Move Variety to AI Opponent
+
 - **Status**: ✅ Complete
 - **Summary**: Implemented move variety feature using Stockfish multipv
 - **Completion Details**:
@@ -14,41 +15,45 @@ This document provides a summary of tickets that need to be updated in your Jira
   - ✅ Implemented `getTopMoves()` function in engine.ts with multipv support
   - ✅ Updated `triggerAiMove()` to randomly select from top N moves
   - ✅ Added variety control slider to AiControlPanel UI
-- **Files Modified**: 
+- **Files Modified**:
   - `src/stores/useAppStore.ts`
   - `src/lib/engine.ts`
   - `src/components/AiControlPanel.tsx`
 
 #### COT-204: Fix Multipv Timeout Error
+
 - **Status**: ✅ Complete
 - **Summary**: Fixed "topMovesReject is not a function" error in timeout handler
 - **Completion Details**:
   - ✅ Fixed timeout handler to save reject reference before calling stopCalculation()
   - ✅ Properly handles cleanup when multipv calculation times out
-- **Files Modified**: 
+- **Files Modified**:
   - `src/lib/engine.ts` (lines 281-297)
 
 #### COT-205: Optimize Multipv Performance
+
 - **Status**: ✅ Complete
 - **Summary**: Reduced depth by 2 when using multipv to improve performance
 - **Completion Details**:
   - ✅ Implemented depth reduction strategy (depth - 2 for multipv)
   - ✅ Maintains move quality while reducing calculation time by ~50-75%
-- **Files Modified**: 
+- **Files Modified**:
   - `src/stores/useAppStore.ts` (line 400)
 
 ### Epic: UI/UX Improvements
 
 #### COT-504: Remove Redundant Connection Status Messages
+
 - **Status**: ✅ Complete
 - **Summary**: Removed duplicate "LM Studio not connected" message from CoachChatPanel
 - **Completion Details**:
   - ✅ Updated CoachChatPanel empty state to not duplicate connection status
   - ✅ Single source of truth for connection status in CoachPanel header
-- **Files Modified**: 
+- **Files Modified**:
   - `src/components/CoachChatPanel.tsx` (line 50)
 
 #### COT-505: Improve Connection Status UI
+
 - **Status**: ✅ Complete
   - **Summary**: Enhanced connection status with better visual hierarchy
 - **Completion Details**:
@@ -56,20 +61,22 @@ This document provides a summary of tickets that need to be updated in your Jira
   - ✅ Changed "Refresh" button to "Check"
   - ✅ Added prominent "Configure Connection" button
   - ✅ Improved visual distinction between connected/disconnected states
-- **Files Modified**: 
+- **Files Modified**:
   - `src/components/CoachPanel.tsx` (lines 107-141)
   - `src/App.tsx` (lines 110-143)
 
 #### COT-506: Improve Opening Badge Clarity
+
 - **Status**: ✅ Complete
 - **Summary**: Enhanced tooltips for White/Black badges in openings list
 - **Completion Details**:
   - ✅ Updated tooltip text to "You play as White/Black in this opening"
   - ✅ Improved clarity of badge purpose
-- **Files Modified**: 
+- **Files Modified**:
   - `src/components/Sidebar.tsx` (line 161)
 
 #### COT-507: Consolidate Refresh Buttons
+
 - **Status**: ✅ Complete
 - **Summary**: Verified single refresh button exists, no consolidation needed
 - **Completion Details**:
@@ -80,6 +87,7 @@ This document provides a summary of tickets that need to be updated in your Jira
 ## Summary of Changes
 
 ### Completed Features
+
 1. **Move Variety** - AI can now select from top N moves instead of always best move
 2. **Timeout Fix** - Multipv timeout handler properly saves reject reference
 3. **Performance** - Depth reduction for multipv calculations improves speed
@@ -87,6 +95,7 @@ This document provides a summary of tickets that need to be updated in your Jira
 5. **Clarity** - Opening badges have clearer tooltips
 
 ### Files Modified
+
 - `src/stores/useAppStore.ts` - Added variety state, updated triggerAiMove
 - `src/lib/engine.ts` - Added getTopMoves, fixed timeout handler
 - `src/components/AiControlPanel.tsx` - Added variety slider UI
@@ -132,6 +141,7 @@ curl -X PUT \
 ```
 
 Or use the Jira CLI tool:
+
 ```bash
 jira issue COT-203 --action transition --status "Done"
 ```

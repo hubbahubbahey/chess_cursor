@@ -2,19 +2,19 @@
 name: Integrate Stockfish Analysis into Coach Service
 overview: Integrate the Python script's Stockfish analysis functionality into the existing coach service. This will enhance position analysis by first getting Stockfish evaluation and best move, then sending that data to LM Studio for explanation, matching the Python script's workflow.
 todos:
-  - id: "1"
+  - id: '1'
     content: Create electron/stockfishService.ts with getEngineAnalysis function that spawns native Stockfish and parses UCI output
     status: completed
-  - id: "2"
+  - id: '2'
     content: Add IPC handler in electron/main.ts for stockfish:analyze
     status: completed
-  - id: "3"
+  - id: '3'
     content: Expose analyzePosition API in electron/preload.ts
     status: completed
-  - id: "4"
+  - id: '4'
     content: Enhance buildCoachPrompt in electron/llmService.ts to include Stockfish analysis data in prompts
     status: completed
-  - id: "5"
+  - id: '5'
     content: Update askCoach in src/stores/useAppStore.ts to fetch Stockfish analysis before building prompt for position/moves types
     status: completed
 isProject: false
@@ -84,19 +84,22 @@ Modify `buildCoachPrompt` function to optionally include Stockfish analysis:
   - Format similar to Python script:
     ```
     Data:
- - Position (FEN): {fen}
- - Engine Eval: {evalText} (Positive=White adv, Negative=Black adv)
- - Best Engine Move: {bestMoveSan}
     ```
+- Position (FEN): {fen}
+- Engine Eval: {evalText} (Positive=White adv, Negative=Black adv)
+- Best Engine Move: {bestMoveSan}
 
-  - Include board visualization (using `chess.js` to generate ASCII board)
+  ```
+
+  ```
+
+- Include board visualization (using `chess.js` to generate ASCII board)
 
 ### 5. Update Store (`src/stores/useAppStore.ts`)
 
 Modify `askCoach` function:
 
 - For `'position'` and `'moves'` analysis types:
-
   1. First call `window.electronAPI.analyzePosition(fen, 15)` to get Stockfish analysis
   2. Pass the analysis result to `buildCoachPrompt` via the context
   3. Show loading state during Stockfish calculation
@@ -126,26 +129,22 @@ Stockfish path configuration:
 
 1. **Stockfish Path**: Hardcode the path initially (`C:\Users\coldk\stockfish-windows-x86-64-avx2\stockfish\stockfish-windows-x86-64-avx2.exe`), can be made configurable later
 
-2. **Error Handling**: 
-
+2. **Error Handling**:
    - If Stockfish fails, show error message and require Stockfish to be available
    - Display user-friendly error messages in the coach panel
    - Do not proceed with analysis if Stockfish is unavailable
 
-3. **Performance**: 
-
+3. **Performance**:
    - Stockfish analysis may take a few seconds (depth 15)
    - Show appropriate loading states
    - Consider caching results for the same position
 
 4. **UCI Protocol Parsing**:
-
    - Parse `info depth X score cp Y` or `info depth X score mate Y`
    - Parse `bestmove XXXX` line
    - Handle edge cases (no best move, invalid position, etc.)
 
 5. **Move Format Conversion**:
-
    - Use `chess.js` to convert UCI move to SAN notation
    - Handle promotions correctly
 

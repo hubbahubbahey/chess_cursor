@@ -3,7 +3,6 @@
  */
 
 // Import worker using Vite's worker syntax
-// @ts-ignore - Vite handles worker imports
 import StockfishWorker from 'stockfish.js/stockfish.wasm.js?worker'
 
 let engine: Worker | null = null
@@ -13,7 +12,7 @@ let currentReject: ((error: Error) => void) | null = null
 let moveTimeout: NodeJS.Timeout | null = null
 let topMovesResolve: ((moves: string[]) => void) | null = null
 let topMovesReject: ((error: Error) => void) | null = null
-let topMoves: Map<number, string> = new Map()
+const topMoves: Map<number, string> = new Map()
 let expectedMultipv: number = 0
 
 /**
@@ -30,7 +29,7 @@ export function initEngine(): Promise<void> {
       // Create worker using the imported worker class
       engine = new StockfishWorker()
 
-      engine.onmessage = (e: MessageEvent) => {
+      if (engine) engine.onmessage = (e: MessageEvent) => {
         const message = e.data as string
 
         // Handle UCI protocol responses
@@ -54,14 +53,19 @@ export function initEngine(): Promise<void> {
               console.log(`Multipv ${multipvNum} move: ${move} (total collected: ${topMoves.size})`)
             } else {
               // Debug: log the message if PV doesn't match
-              console.warn('Multipv info line found but PV pattern did not match:', message.substring(0, 100))
+              console.warn(
+                'Multipv info line found but PV pattern did not match:',
+                message.substring(0, 100)
+              )
             }
           }
         } else if (message.startsWith('bestmove')) {
           // Check if this is a multipv result
           if (topMovesResolve && expectedMultipv > 0) {
             // When we get bestmove, we've collected all multipv moves
-            console.log(`Multipv bestmove received, expectedMultipv: ${expectedMultipv}, topMoves size: ${topMoves.size}`)
+            console.log(
+              `Multipv bestmove received, expectedMultipv: ${expectedMultipv}, topMoves size: ${topMoves.size}`
+            )
             const movesArray: string[] = []
             for (let i = 1; i <= expectedMultipv; i++) {
               const move = topMoves.get(i)
@@ -71,9 +75,12 @@ export function initEngine(): Promise<void> {
                 console.warn(`Multipv ${i} move not found in topMoves map`)
               }
             }
-            
-            console.log(`Collected ${movesArray.length} moves from multipv (expected ${expectedMultipv}):`, movesArray)
-            
+
+            console.log(
+              `Collected ${movesArray.length} moves from multipv (expected ${expectedMultipv}):`,
+              movesArray
+            )
+
             if (movesArray.length > 0) {
               if (moveTimeout) {
                 clearTimeout(moveTimeout)
@@ -103,13 +110,22 @@ export function initEngine(): Promise<void> {
               expectedMultipv = 0
               savedReject(new Error('No valid moves found from multipv'))
             } else {
-              console.warn('Multipv bestmove received but topMovesResolve was cleared before processing')
+              console.warn(
+                'Multipv bestmove received but topMovesResolve was cleared before processing'
+              )
             }
           } else {
             // Regular bestmove handler (for single-move requests)
             // Parse the best move from the response
             // Format: "bestmove e2e4" or "bestmove e7e8q" (with promotion)
-            console.log('Engine bestmove response:', message, 'topMovesResolve:', !!topMovesResolve, 'currentResolve:', !!currentResolve)
+            console.log(
+              'Engine bestmove response:',
+              message,
+              'topMovesResolve:',
+              !!topMovesResolve,
+              'currentResolve:',
+              !!currentResolve
+            )
             const parts = message.split(' ')
             const move = parts[1]
             if (currentResolve && move && move !== '(none)') {
@@ -169,7 +185,7 @@ export function initEngine(): Promise<void> {
 
       // Initialize UCI protocol
       engine.postMessage('uci')
-      
+
       // Set timeout for initialization
       setTimeout(() => {
         if (!isReady) {
@@ -298,7 +314,14 @@ export function getTopMoves(fen: string, depth: number = 10, count: number = 3):
 
     // Set the position and start calculating with multipv
     try {
-      console.log('Setting engine position with multipv:', fen, 'depth:', depth, 'multipv:', expectedMultipv)
+      console.log(
+        'Setting engine position with multipv:',
+        fen,
+        'depth:',
+        depth,
+        'multipv:',
+        expectedMultipv
+      )
       engine.postMessage(`position fen ${fen}`)
       engine.postMessage(`setoption name multipv value ${expectedMultipv}`)
       engine.postMessage(`go depth ${depth}`)
@@ -371,22 +394,22 @@ export function parseUciMove(uciMove: string): { from: string; to: string; promo
   if (!uciMove || uciMove.length < 4) {
     throw new Error(`Invalid UCI move format: ${uciMove}`)
   }
-  
+
   const from = uciMove.slice(0, 2)
   const to = uciMove.slice(2, 4)
   const promotion = uciMove.length > 4 ? uciMove[4] : undefined
-  
+
   // Validate square format (should be a-h, 1-8)
   const squareRegex = /^[a-h][1-8]$/
   if (!squareRegex.test(from) || !squareRegex.test(to)) {
     throw new Error(`Invalid square format in UCI move: ${uciMove}`)
   }
-  
+
   // Validate promotion piece if present (should be q, r, b, or n)
   if (promotion && !['q', 'r', 'b', 'n'].includes(promotion.toLowerCase())) {
     throw new Error(`Invalid promotion piece in UCI move: ${uciMove}`)
   }
-  
+
   return { from, to, promotion }
 }
 

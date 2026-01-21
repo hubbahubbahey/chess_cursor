@@ -1,5 +1,5 @@
 import { useAppStore } from '../stores/useAppStore'
-import { MessageCircle, Sparkles, Tag, AlertTriangle, ArrowRight } from 'lucide-react'
+import { Sparkles, Tag, AlertTriangle, ArrowRight } from 'lucide-react'
 
 export default function LessonPanel() {
   const { currentPosition, childPositions, setCurrentPosition, currentOpening } = useAppStore()
@@ -27,9 +27,7 @@ export default function LessonPanel() {
 
             {/* Main coach message */}
             <div className="bg-surface-700/50 rounded-lg p-4 border-l-4 border-accent-gold">
-              <p className="text-gray-200 leading-relaxed">
-                {explanation.coach}
-              </p>
+              <p className="text-gray-200 leading-relaxed">{explanation.coach}</p>
             </div>
 
             {/* Chess insight/wisdom */}
@@ -38,9 +36,7 @@ export default function LessonPanel() {
                 <Sparkles size={18} className="text-blue-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-blue-400 mb-1">Chess Wisdom</p>
-                  <p className="text-sm text-gray-300 italic">
-                    "{explanation.insight}"
-                  </p>
+                  <p className="text-sm text-gray-300 italic">"{explanation.insight}"</p>
                 </div>
               </div>
             )}
@@ -51,13 +47,11 @@ export default function LessonPanel() {
                 <AlertTriangle size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-medium text-amber-400 mb-1">Watch Out</p>
-                  <p className="text-sm text-gray-300">
-                    {explanation.warning}
-                  </p>
+                  <p className="text-sm text-gray-300">{explanation.warning}</p>
                 </div>
               </div>
             )}
-            
+
             {/* Show next moves */}
             {childPositions.length > 0 && (
               <div className="mt-4 pt-4 border-t border-surface-700">
@@ -65,7 +59,7 @@ export default function LessonPanel() {
                   {childPositions.length === 1 ? 'Next Move' : 'Possible Continuations'}
                 </h4>
                 <div className="space-y-2">
-                  {childPositions.map(child => (
+                  {childPositions.map((child) => (
                     <button
                       key={child.id}
                       onClick={() => setCurrentPosition(child)}
@@ -77,8 +71,8 @@ export default function LessonPanel() {
                       <span className="text-sm text-gray-400 flex-1 text-left truncate">
                         {child.explanation?.coach.slice(0, 50)}...
                       </span>
-                      <ArrowRight 
-                        size={16} 
+                      <ArrowRight
+                        size={16}
                         className="text-gray-600 group-hover:text-accent-gold transition-colors"
                       />
                     </button>
@@ -88,9 +82,7 @@ export default function LessonPanel() {
             )}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">
-            Select a position to see coaching tips
-          </p>
+          <p className="text-gray-500 text-center py-8">Select a position to see coaching tips</p>
         )}
       </div>
     </div>

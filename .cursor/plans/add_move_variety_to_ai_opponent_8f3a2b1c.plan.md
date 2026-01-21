@@ -47,6 +47,7 @@ Use Stockfish's `multipv` (multiple principal variations) feature to get the top
 - Return array of moves in UCI format, sorted by evaluation
 
 **Key changes**:
+
 - Send `setoption name multipv value <count>` before calculating
 - Parse `info depth X multipv Y score cp X pv <move1> <move2> ...` lines
 - Collect moves from all multipv lines

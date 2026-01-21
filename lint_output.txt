@@ -1,0 +1,250 @@
+
+> chess-opening-trainer@1.0.0 lint
+> eslint . --report-unused-disable-directives --max-warnings 0
+
+(node:63056) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/coldk/cursor_chess/eslint.config.js?mtime=1768990333149 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\coldk\cursor_chess\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+C:\Users\coldk\cursor_chess\electron\llmService.ts
+  243:14  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\coldk\cursor_chess\electron\stockfishService.ts
+  33:9   error  'isReady' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  41:18  error  'e' is defined but never used                 @typescript-eslint/no-unused-vars
+
+C:\Users\coldk\cursor_chess\src\App.tsx
+  66:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\coldk\cursor_chess\src\App.tsx:66:5
+  64 |
+  65 |   useEffect(() => {
+> 66 |     setTempEndpoint(coachSettings.endpoint)
+     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  67 |   }, [coachSettings.endpoint])
+  68 |
+  69 |   const handleQuickAnalysis = (type: AnalysisType) => {  react-hooks/set-state-in-effect
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx
+   47:5   error    'positions' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+   75:46  error    Error: Cannot access variable before it is declared
+
+`handleResizeMove` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:75:46
+  73 |       resizeStartY.current = e.clientY
+  74 |       resizeStartSize.current = boardSize
+> 75 |       document.addEventListener('mousemove', handleResizeMove)
+     |                                              ^^^^^^^^^^^^^^^^ `handleResizeMove` accessed before it is declared
+  76 |       document.addEventListener('mouseup', handleResizeEnd)
+  77 |     },
+  78 |     [boardSize]
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:81:3
+  79 |   )
+  80 |
+> 81 |   const handleResizeMove = useCallback((e: MouseEvent) => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 82 |     if (!isResizing.current) return
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 83 |
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 95 |     setBoardSize(newSize)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 96 |   }, [])
+     | ^^^^^^^^^ `handleResizeMove` is declared here
+  97 |
+  98 |   const handleResizeEnd = useCallback(() => {
+  99 |     isResizing.current = false                                   react-hooks/immutability
+   76:44  error    Error: Cannot access variable before it is declared
+
+`handleResizeEnd` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:76:44
+  74 |       resizeStartSize.current = boardSize
+  75 |       document.addEventListener('mousemove', handleResizeMove)
+> 76 |       document.addEventListener('mouseup', handleResizeEnd)
+     |                                            ^^^^^^^^^^^^^^^ `handleResizeEnd` accessed before it is declared
+  77 |     },
+  78 |     [boardSize]
+  79 |   )
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:98:3
+   96 |   }, [])
+   97 |
+>  98 |   const handleResizeEnd = useCallback(() => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |     isResizing.current = false
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 100 |     document.removeEventListener('mousemove', handleResizeMove)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |     document.removeEventListener('mouseup', handleResizeEnd)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |   }, [handleResizeMove])
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^ `handleResizeEnd` is declared here
+  103 |
+  104 |   // Cleanup on unmount
+  105 |   useEffect(() => {             react-hooks/immutability
+   78:5   warning  React Hook useCallback has missing dependencies: 'handleResizeEnd' and 'handleResizeMove'. Either include them or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/exhaustive-deps
+  127:6   warning  React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/exhaustive-deps
+  149:9   error    Error: Cannot access variable before it is declared
+
+`handleMove` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:149:9
+  147 |       // If clicking a legal move destination, make the move
+  148 |       if (legalMoves.includes(square)) {
+> 149 |         handleMove(selectedSquare!, square)
+      |         ^^^^^^^^^^ `handleMove` accessed before it is declared
+  150 |         setSelectedSquare(null)
+  151 |         setLegalMoves([])
+  152 |         return
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:169:3
+  167 |
+  168 |   // Handle move via drag and drop or click
+> 169 |   const handleMove = useCallback(
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 170 |     (from: string, to: string) => {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 171 |       // If there's a custom move handler, use it
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 204 |     [makeMove, childPositions, setCurrentPosition, onMoveAttempt, aiEnabled, triggerAiMove]
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 205 |   )
+      | ^^^^ `handleMove` is declared here
+  206 |
+  207 |   // Handle drag and drop
+  208 |   const onPieceDrop = useCallback(  react-hooks/immutability
+  165:5   warning  React Hook useCallback has a missing dependency: 'handleMove'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/exhaustive-deps
+
+C:\Users\coldk\cursor_chess\src\components\CoachChatPanel.tsx
+   15:5   error  'fen' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+   16:5   error  'setCoachHighlightSquares' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  111:91  error  Unnecessary escape character: \#                               no-useless-escape
+
+C:\Users\coldk\cursor_chess\src\components\LessonPanel.tsx
+  2:10  error  'MessageCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx
+   70:6   warning  React Hook useEffect has a missing dependency: 'pickRandomQuestion'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+   86:11  error    Error: Cannot access variable before it is declared
+
+`handleMoveAttempt` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx:86:11
+  84 |         const san = moveToSAN(fen, selectedSquare!, square)
+  85 |         if (san) {
+> 86 |           handleMoveAttempt(san)
+     |           ^^^^^^^^^^^^^^^^^ `handleMoveAttempt` accessed before it is declared
+  87 |         }
+  88 |         setSelectedSquare(null)
+  89 |         setLegalMoves([])
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx:120:3
+  118 |
+  119 |   // Check the user's move
+> 120 |   const handleMoveAttempt = (moveSan: string) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 121 |     setUserMove(moveSan)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 122 |     setAttempts((prev) => prev + 1)
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |     }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |   }
+      | ^^^^ `handleMoveAttempt` is declared here
+  149 |
+  150 |   // Show hint (first letter of the move)
+  151 |   const handleShowHint = () => {  react-hooks/immutability
+  102:5   warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+  116:5   warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/exhaustive-deps
+  205:21  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/rules-of-hooks
+
+C:\Users\coldk\cursor_chess\src\components\StatsPanel.tsx
+   4:65  error  'XCircle' is defined but never used                    @typescript-eslint/no-unused-vars
+  14:10  error  'reviews' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx
+   45:25  error    Error: Cannot access variable before it is declared
+
+`getParentFen` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:45:25
+  43 |       const review = dueReviews[currentReviewIndex]
+  44 |       // Load the parent position (we want to show the position BEFORE the move)
+> 45 |       const parentFen = getParentFen(review.fen, review.move_san)
+     |                         ^^^^^^^^^^^^ `getParentFen` accessed before it is declared
+  46 |       setFen(parentFen || review.fen)
+  47 |       setCorrectMove(review.move_san || '')
+  48 |       setState('question')
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:58:3
+  56 |
+  57 |   // Get the FEN before a move was made
+> 58 |   function getParentFen(fen: string, moveSan: string | null): string | null {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |     if (!moveSan) return null
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 60 |     // For training, we want to show the position where the user needs to find the move
+     ΓÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 69 |     }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 70 |   }
+     | ^^^^ `getParentFen` is declared here
+  71 |
+  72 |   // Handle square click
+  73 |   const onSquareClick = useCallback(  react-hooks/immutability
+   87:11  error    Error: Cannot access variable before it is declared
+
+`handleMoveAttempt` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:87:11
+  85 |         const san = moveToSAN(fen, selectedSquare!, square)
+  86 |         if (san) {
+> 87 |           handleMoveAttempt(san)
+     |           ^^^^^^^^^^^^^^^^^ `handleMoveAttempt` accessed before it is declared
+  88 |         }
+  89 |         setSelectedSquare(null)
+  90 |         setLegalMoves([])
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:121:3
+  119 |
+  120 |   // Check if the user's move is correct
+> 121 |   const handleMoveAttempt = (moveSan: string) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 122 |     setUserMove(moveSan)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 123 |     setSessionTotal((prev) => prev + 1)
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 136 |     }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 137 |   }
+      | ^^^^ `handleMoveAttempt` is declared here
+  138 |
+  139 |   // Handle difficulty rating and move to next card
+  140 |   const handleRating = async (difficulty: 'again' | 'hard' | 'good' | 'easy') => {                                                                                                                                                           react-hooks/immutability
+  103:5   warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  117:5   warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+  275:21  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/rules-of-hooks
+
+C:\Users\coldk\cursor_chess\src\lib\chess.ts
+  171:91  error  Unnecessary escape character: \#  no-useless-escape
+
+C:\Users\coldk\cursor_chess\src\lib\engine.ts
+  6:1  error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+Γ£û 29 problems (21 errors, 8 warnings)
+

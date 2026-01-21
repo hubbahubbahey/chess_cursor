@@ -30,7 +30,7 @@ export function getLegalMovesFromSquare(fen: string, square: Square): Move[] {
 export function isMoveLegal(fen: string, from: Square, to: Square): boolean {
   const game = new Chess(fen)
   const moves = game.moves({ square: from, verbose: true })
-  return moves.some(move => move.to === to)
+  return moves.some((move) => move.to === to)
 }
 
 /**
@@ -51,7 +51,7 @@ export function makeMove(fen: string, from: Square, to: Square, promotion?: stri
  */
 export function getPieceAt(fen: string, square: Square): ChessPiece | null {
   const game = new Chess(fen)
-  return game.get(square)
+  return game.get(square) || null
 }
 
 /**
@@ -99,26 +99,31 @@ export function isDraw(fen: string): boolean {
 export function parsePGN(pgn: string): { fen: string; move: string }[] {
   const game = new Chess()
   game.loadPgn(pgn)
-  
+
   const positions: { fen: string; move: string }[] = []
   const history = game.history({ verbose: true })
-  
+
   // Reset and replay to capture each position
   game.reset()
   positions.push({ fen: game.fen(), move: '' })
-  
+
   for (const move of history) {
     game.move(move.san)
     positions.push({ fen: game.fen(), move: move.san })
   }
-  
+
   return positions
 }
 
 /**
  * Convert a move to SAN notation
  */
-export function moveToSAN(fen: string, from: Square, to: Square, promotion?: string): string | null {
+export function moveToSAN(
+  fen: string,
+  from: Square,
+  to: Square,
+  promotion?: string
+): string | null {
   const game = new Chess(fen)
   try {
     const move = game.move({ from, to, promotion: promotion as 'q' | 'r' | 'b' | 'n' | undefined })
@@ -159,17 +164,18 @@ export function isValidFen(fen: string): boolean {
 function extractSANMoves(text: string, fen: string): string[] {
   const squares: string[] = []
   const game = new Chess(fen)
-  
+
   // Pattern for SAN moves: Nf3, Bf4, d4, c6, O-O, e4+, etc.
   // Matches: piece moves (Nf3), pawn moves (d4), castling (O-O, O-O-O), with optional check/checkmate (+#)
-  const sanPattern = /\b([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?|O-O(?:-O)?|[a-h][1-8](?:=[QRBN])?)\+?\#?\b/g
-  
+  const sanPattern =
+    /\b([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?|O-O(?:-O)?|[a-h][1-8](?:=[QRBN])?)\+?#?\b/g
+
   const matches = text.matchAll(sanPattern)
   for (const match of matches) {
     const moveText = match[1]
     try {
       // Try to parse the move
-      const move = game.move(moveText, { sloppy: true })
+      const move = game.move(moveText)
       if (move) {
         squares.push(move.to)
       }
@@ -177,7 +183,7 @@ function extractSANMoves(text: string, fen: string): string[] {
       // Invalid move, skip
     }
   }
-  
+
   return squares
 }
 
@@ -186,11 +192,11 @@ function extractSANMoves(text: string, fen: string): string[] {
  */
 function extractSquareReferences(text: string): string[] {
   const squares: string[] = []
-  
+
   // Pattern for squares: a-h followed by 1-8
   // We exclude matches that are part of SAN moves (already handled)
   const squarePattern = /\b([a-h][1-8])\b/g
-  
+
   const matches = text.matchAll(squarePattern)
   for (const match of matches) {
     const square = match[1]
@@ -199,7 +205,7 @@ function extractSquareReferences(text: string): string[] {
       squares.push(square)
     }
   }
-  
+
   return squares
 }
 
@@ -209,30 +215,31 @@ function extractSquareReferences(text: string): string[] {
 function extractPieceReferences(text: string, fen: string): string[] {
   const squares: string[] = []
   const game = new Chess(fen)
-  
+
   // Pattern for piece references: "pawn on d4", "knight on f3", "d4 pawn", etc.
-  const piecePattern = /\b(pawn|knight|bishop|rook|queen|king)\s+(?:on\s+)?([a-h][1-8])\b|\b([a-h][1-8])\s+(pawn|knight|bishop|rook|queen|king)\b/gi
-  
+  const piecePattern =
+    /\b(pawn|knight|bishop|rook|queen|king)\s+(?:on\s+)?([a-h][1-8])\b|\b([a-h][1-8])\s+(pawn|knight|bishop|rook|queen|king)\b/gi
+
   const matches = text.matchAll(piecePattern)
   for (const match of matches) {
     const pieceName = (match[1] || match[4])?.toLowerCase()
     const square = (match[2] || match[3])?.toLowerCase()
-    
+
     if (!pieceName || !square) continue
-    
+
     // Map piece names to chess.js piece types
     const pieceMap: Record<string, PieceType> = {
-      'pawn': 'p',
-      'knight': 'n',
-      'bishop': 'b',
-      'rook': 'r',
-      'queen': 'q',
-      'king': 'k'
+      pawn: 'p',
+      knight: 'n',
+      bishop: 'b',
+      rook: 'r',
+      queen: 'q',
+      king: 'k'
     }
-    
+
     const pieceType = pieceMap[pieceName]
     if (!pieceType) continue
-    
+
     // Check if there's a piece of this type on the square
     try {
       const piece = game.get(square as Square)
@@ -243,7 +250,7 @@ function extractPieceReferences(text: string, fen: string): string[] {
       // Invalid square, skip
     }
   }
-  
+
   return squares
 }
 
@@ -253,16 +260,16 @@ function extractPieceReferences(text: string, fen: string): string[] {
  */
 export function parseChessNotation(text: string, fen: string): string[] {
   const squares = new Set<string>()
-  
+
   // Extract different types of notation
   const sanSquares = extractSANMoves(text, fen)
   const squareRefs = extractSquareReferences(text)
   const pieceRefs = extractPieceReferences(text, fen)
-  
+
   // Combine all squares
-  sanSquares.forEach(sq => squares.add(sq))
-  squareRefs.forEach(sq => squares.add(sq))
-  pieceRefs.forEach(sq => squares.add(sq))
-  
+  sanSquares.forEach((sq) => squares.add(sq))
+  squareRefs.forEach((sq) => squares.add(sq))
+  pieceRefs.forEach((sq) => squares.add(sq))
+
   return Array.from(squares)
 }

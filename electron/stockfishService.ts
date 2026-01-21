@@ -6,7 +6,8 @@
 import { spawn, ChildProcess } from 'child_process'
 import { Chess } from 'chess.js'
 
-const STOCKFISH_PATH = 'C:\\Users\\coldk\\stockfish-windows-x86-64-avx2\\stockfish\\stockfish-windows-x86-64-avx2.exe'
+const STOCKFISH_PATH =
+  'C:\\Users\\coldk\\stockfish-windows-x86-64-avx2\\stockfish\\stockfish-windows-x86-64-avx2.exe'
 
 export interface StockfishAnalysis {
   evalText: string
@@ -29,7 +30,6 @@ export async function getEngineAnalysis(
     let outputBuffer = ''
     let bestMove: string | null = null
     let score: { type: 'cp' | 'mate'; value: number } | null = null
-    let isReady = false
     let analysisStarted = false
     const timeout = 30000 // 30 second timeout
 
@@ -37,7 +37,7 @@ export async function getEngineAnalysis(
       if (stockfish) {
         try {
           stockfish.kill()
-        } catch (e) {
+        } catch {
           // Ignore cleanup errors
         }
         stockfish = null
@@ -70,10 +70,9 @@ export async function getEngineAnalysis(
 
         for (const line of lines) {
           const trimmed = line.trim()
-          
+
           // Check for readyok
           if (trimmed === 'readyok') {
-            isReady = true
             if (!analysisStarted) {
               // Start analysis
               analysisStarted = true
@@ -105,7 +104,7 @@ export async function getEngineAnalysis(
             const parts = trimmed.split(' ')
             if (parts.length >= 2 && parts[1] !== '(none)') {
               bestMove = parts[1]
-              
+
               // We have everything we need
               cleanup()
               clearTimeout(timeoutId)
@@ -151,7 +150,11 @@ export async function getEngineAnalysis(
                   bestMoveSan: move.san
                 })
               } catch (error) {
-                reject(new Error(`Failed to convert move: ${error instanceof Error ? error.message : 'Unknown error'}`))
+                reject(
+                  new Error(
+                    `Failed to convert move: ${error instanceof Error ? error.message : 'Unknown error'}`
+                  )
+                )
               }
               return
             } else {
@@ -188,11 +191,14 @@ export async function getEngineAnalysis(
       // Initialize UCI protocol
       stockfish.stdin.write('uci\n')
       stockfish.stdin.write('isready\n')
-
     } catch (error) {
       cleanup()
       clearTimeout(timeoutId)
-      reject(new Error(`Failed to analyze position: ${error instanceof Error ? error.message : 'Unknown error'}`))
+      reject(
+        new Error(
+          `Failed to analyze position: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      )
     }
   })
 }

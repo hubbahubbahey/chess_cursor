@@ -1,6 +1,15 @@
 import { create } from 'zustand'
 import { Chess } from 'chess.js'
-import { initEngine, getBestMove, getTopMoves, parseUciMove, stopCalculation, isEngineReady, DifficultyLevel, DIFFICULTY_PRESETS } from '../lib/engine'
+import {
+  initEngine,
+  getBestMove,
+  getTopMoves,
+  parseUciMove,
+  stopCalculation,
+  isEngineReady,
+  DifficultyLevel,
+  DIFFICULTY_PRESETS
+} from '../lib/engine'
 
 export type ViewType = 'explore' | 'train' | 'quiz' | 'stats'
 
@@ -12,10 +21,10 @@ export interface Opening {
 }
 
 export interface PositionExplanation {
-  coach: string        // Main coaching point in conversational tone
-  insight?: string     // General chess wisdom/principle
-  concept?: string     // Strategic or tactical concept name
-  warning?: string     // Common mistake to avoid
+  coach: string // Main coaching point in conversational tone
+  insight?: string // General chess wisdom/principle
+  concept?: string // Strategic or tactical concept name
+  warning?: string // Common mistake to avoid
 }
 
 export interface Position {
@@ -69,7 +78,7 @@ interface AppState {
   // Navigation
   currentView: ViewType
   setCurrentView: (view: ViewType) => void
-  
+
   // Sidebar
   sidebarCollapsed: boolean
   toggleSidebar: () => void
@@ -100,7 +109,7 @@ interface AppState {
   currentReviewIndex: number
   loadDueReviews: (openingId?: number) => Promise<void>
   nextReview: () => void
-  
+
   // Quiz
   quizScore: number
   quizStreak: number
@@ -110,7 +119,7 @@ interface AppState {
   // Board orientation
   boardOrientation: 'white' | 'black'
   flipBoard: () => void
-  
+
   // Move history for current exploration
   moveHistory: string[]
   addToHistory: (move: string) => void
@@ -142,22 +151,25 @@ interface AppState {
   deleteCoachMessage: (messageId: string) => void
   checkCoachConnection: () => Promise<void>
   updateCoachSettings: (settings: Partial<CoachSettings>) => Promise<void>
-  askCoach: (analysisType: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom', customQuestion?: string) => Promise<void>
+  askCoach: (
+    analysisType: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom',
+    customQuestion?: string
+  ) => Promise<void>
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Navigation
   currentView: 'explore',
   setCurrentView: (view) => set({ currentView: view }),
-  
+
   // Sidebar
   sidebarCollapsed: true,
-  toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+  toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
   // Chess game state
   game: new Chess(),
   fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-  
+
   setFen: (fen) => {
     const game = new Chess(fen)
     set({ fen, game })
@@ -182,8 +194,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Stop any ongoing AI calculation
     stopCalculation()
     const game = new Chess()
-    set({ 
-      fen: game.fen(), 
+    set({
+      fen: game.fen(),
       game,
       moveHistory: [],
       currentPosition: null,
@@ -212,9 +224,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectOpening: async (opening) => {
     try {
       const positions = await window.electronAPI.getPositions(opening.id)
-      const rootPosition = positions.find(p => p.parent_id === null) || null
-      
-      set({ 
+      const rootPosition = positions.find((p) => p.parent_id === null) || null
+
+      set({
         currentOpening: opening,
         positions,
         currentPosition: rootPosition,
@@ -280,12 +292,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   incrementQuizScore: (correct) => {
     if (correct) {
-      set(state => ({
+      set((state) => ({
         quizScore: state.quizScore + 1,
         quizStreak: state.quizStreak + 1
       }))
     } else {
-      set(state => ({
+      set((state) => ({
         quizScore: state.quizScore,
         quizStreak: 0
       }))
@@ -296,24 +308,26 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // Board orientation
   boardOrientation: 'white',
-  flipBoard: () => set(state => ({ 
-    boardOrientation: state.boardOrientation === 'white' ? 'black' : 'white' 
-  })),
+  flipBoard: () =>
+    set((state) => ({
+      boardOrientation: state.boardOrientation === 'white' ? 'black' : 'white'
+    })),
 
   // Move history
   moveHistory: [],
-  
-  addToHistory: (move) => set(state => ({
-    moveHistory: [...state.moveHistory, move]
-  })),
+
+  addToHistory: (move) =>
+    set((state) => ({
+      moveHistory: [...state.moveHistory, move]
+    })),
 
   goBack: () => {
     // Stop any ongoing AI calculation
     stopCalculation()
     set({ aiThinking: false })
-    
+
     const { moveHistory, currentPosition, positions, game } = get()
-    
+
     // If there's move history, undo the last move
     if (moveHistory.length > 0) {
       game.undo()
@@ -323,10 +337,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         moveHistory: moveHistory.slice(0, -1)
       })
     }
-    
+
     // Also handle position tracking if we're in an opening
     if (currentPosition?.parent_id) {
-      const parentPosition = positions.find(p => p.id === currentPosition.parent_id)
+      const parentPosition = positions.find((p) => p.id === currentPosition.parent_id)
       if (parentPosition) {
         set({ currentPosition: parentPosition })
         get().loadChildPositions(parentPosition.id)
@@ -347,7 +361,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ aiEnabled: enabled })
     if (enabled) {
       // Initialize engine when AI is enabled
-      initEngine().catch(err => console.error('Failed to init engine:', err))
+      initEngine().catch((err) => console.error('Failed to init engine:', err))
     }
   },
 
@@ -359,7 +373,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   triggerAiMove: async () => {
     const { aiEnabled, aiColor, aiDifficulty, aiVariety, game } = get()
-    
+
     // Check if it's actually the AI's turn
     const currentTurn = game.turn() === 'w' ? 'white' : 'black'
     if (!aiEnabled || currentTurn !== aiColor) {
@@ -391,7 +405,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const depth = DIFFICULTY_PRESETS[aiDifficulty]
       let bestMove: string
-      
+
       // Use variety if > 1, otherwise use best move only
       if (aiVariety > 1) {
         try {
@@ -404,7 +418,10 @@ export const useAppStore = create<AppState>((set, get) => ({
             // Randomly select from top moves
             const randomIndex = Math.floor(Math.random() * topMoves.length)
             bestMove = topMoves[randomIndex]
-            console.log(`AI selected move ${randomIndex + 1} of ${topMoves.length} top moves:`, bestMove)
+            console.log(
+              `AI selected move ${randomIndex + 1} of ${topMoves.length} top moves:`,
+              bestMove
+            )
             console.log('All top moves:', topMoves)
           } else {
             // Fallback to best move if no moves found
@@ -427,16 +444,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       } else {
         bestMove = await getBestMove(currentFen, depth)
       }
-      
+
       console.log('AI received move from Stockfish:', bestMove)
-      
+
       // Parse the move
       const { from, to, promotion } = parseUciMove(bestMove)
       console.log('Parsed move:', { from, to, promotion })
-      
+
       // Add a delay before executing the move to make it feel less rushed
-      await new Promise(resolve => setTimeout(resolve, 800))
-      
+      await new Promise((resolve) => setTimeout(resolve, 800))
+
       // Get the current state again (in case it changed while thinking)
       const currentState = get()
       const stateFen = currentState.game.fen()
@@ -467,15 +484,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   coachHighlightSquares: [],
 
-  toggleCoachPanel: () => set(state => ({ coachPanelOpen: !state.coachPanelOpen })),
+  toggleCoachPanel: () => set((state) => ({ coachPanelOpen: !state.coachPanelOpen })),
 
   clearCoachHistory: () => set({ coachMessages: [] }),
 
   setCoachHighlightSquares: (squares) => set({ coachHighlightSquares: squares }),
 
-  deleteCoachMessage: (messageId) => set(state => ({
-    coachMessages: state.coachMessages.filter(msg => msg.id !== messageId)
-  })),
+  deleteCoachMessage: (messageId) =>
+    set((state) => ({
+      coachMessages: state.coachMessages.filter((msg) => msg.id !== messageId)
+    })),
 
   checkCoachConnection: async () => {
     try {
@@ -518,16 +536,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     const userMessage: CoachMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: analysisType === 'custom' && customQuestion 
-        ? customQuestion 
-        : getAnalysisTypeLabel(analysisType),
+      content:
+        analysisType === 'custom' && customQuestion
+          ? customQuestion
+          : getAnalysisTypeLabel(analysisType),
       timestamp: Date.now(),
       analysisType
     }
 
-    set({ 
+    set({
       coachMessages: [...coachMessages, userMessage],
-      coachLoading: true 
+      coachLoading: true
     })
 
     // For position and moves analysis, get Stockfish analysis first
@@ -543,9 +562,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           content: `Sorry, I couldn't analyze the position with Stockfish. ${error instanceof Error ? error.message : 'Please ensure Stockfish is available and try again.'}`,
           timestamp: Date.now()
         }
-        set(state => ({ 
+        set((state) => ({
           coachMessages: [...state.coachMessages, errorMessage],
-          coachLoading: false 
+          coachLoading: false
         }))
         return // Stop here if Stockfish fails
       }
@@ -563,9 +582,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     try {
       // Send to LLM
-      const result = await window.electronAPI.coachChat([
-        { role: 'user', content: prompt }
-      ])
+      const result = await window.electronAPI.coachChat([{ role: 'user', content: prompt }])
 
       if (result.success && result.content) {
         const assistantMessage: CoachMessage = {
@@ -574,9 +591,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           content: result.content,
           timestamp: Date.now()
         }
-        set(state => ({ 
+        set((state) => ({
           coachMessages: [...state.coachMessages, assistantMessage],
-          coachLoading: false 
+          coachLoading: false
         }))
       } else {
         // Add error message
@@ -586,9 +603,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           content: `Sorry, I couldn't process that request. ${result.error || 'Please try again.'}`,
           timestamp: Date.now()
         }
-        set(state => ({ 
+        set((state) => ({
           coachMessages: [...state.coachMessages, errorMessage],
-          coachLoading: false 
+          coachLoading: false
         }))
       }
     } catch (error) {
@@ -596,12 +613,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       const errorMessage: CoachMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please make sure LM Studio is running and try again.',
+        content:
+          'Sorry, I encountered an error. Please make sure LM Studio is running and try again.',
         timestamp: Date.now()
       }
-      set(state => ({ 
+      set((state) => ({
         coachMessages: [...state.coachMessages, errorMessage],
-        coachLoading: false 
+        coachLoading: false
       }))
     }
   }
@@ -610,10 +628,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 // Helper function to get readable labels for analysis types
 function getAnalysisTypeLabel(type: string): string {
   switch (type) {
-    case 'position': return 'Analyze this position'
-    case 'moves': return 'What move should I play?'
-    case 'mistakes': return 'Did I make any mistakes?'
-    case 'plan': return 'What\'s the plan here?'
-    default: return 'Help me understand this position'
+    case 'position':
+      return 'Analyze this position'
+    case 'moves':
+      return 'What move should I play?'
+    case 'mistakes':
+      return 'Did I make any mistakes?'
+    case 'plan':
+      return "What's the plan here?"
+    default:
+      return 'Help me understand this position'
   }
 }

@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAppStore } from '../stores/useAppStore'
-import { 
-  GraduationCap, 
-  ChevronRight, 
+import {
+  GraduationCap,
+  ChevronRight,
   ChevronLeft,
-  Trash2, 
-  Settings, 
+  Trash2,
+  Settings,
   Zap,
   Target,
   AlertCircle,
@@ -104,11 +104,13 @@ export default function CoachPanel() {
         </div>
 
         {/* Connection status */}
-        <div className={`rounded-lg p-2.5 text-xs ${
-          coachConnected 
-            ? 'bg-green-400/10 border border-green-400/20' 
-            : 'bg-red-400/10 border border-red-400/20'
-        }`}>
+        <div
+          className={`rounded-lg p-2.5 text-xs ${
+            coachConnected
+              ? 'bg-green-400/10 border border-green-400/20'
+              : 'bg-red-400/10 border border-red-400/20'
+          }`}
+        >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               {coachConnected ? (
@@ -206,7 +208,6 @@ export default function CoachPanel() {
           />
         </div>
       </div>
-
     </div>
   )
 }
@@ -231,4 +232,3 @@ function QuickButton({ icon, label, onClick, disabled }: QuickButtonProps) {
     </button>
   )
 }
-

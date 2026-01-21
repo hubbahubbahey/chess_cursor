@@ -11,9 +11,7 @@ export default function CoachChatPanel() {
     coachLoading,
     coachConnected,
     coachPanelOpen,
-    askCoach,
-    fen,
-    setCoachHighlightSquares
+    askCoach
   } = useAppStore()
 
   const [customQuestion, setCustomQuestion] = useState('')
@@ -45,9 +43,9 @@ export default function CoachChatPanel() {
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <GraduationCap size={40} className="text-gray-600 mb-3" />
             <p className="text-gray-500 text-sm">
-              {coachConnected 
-                ? "Ask me anything about the position! Use the quick buttons above or type your own question."
-                : "The AI Coach is ready to help. Configure your connection in the settings above."}
+              {coachConnected
+                ? 'Ask me anything about the position! Use the quick buttons above or type your own question.'
+                : 'The AI Coach is ready to help. Configure your connection in the settings above.'}
             </p>
           </div>
         ) : (
@@ -73,7 +71,9 @@ export default function CoachChatPanel() {
             type="text"
             value={customQuestion}
             onChange={(e) => setCustomQuestion(e.target.value)}
-            placeholder={coachConnected ? "Ask a question..." : "Connect to LM Studio to ask questions"}
+            placeholder={
+              coachConnected ? 'Ask a question...' : 'Connect to LM Studio to ask questions'
+            }
             disabled={!coachConnected || coachLoading}
             className="flex-1 bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-accent-gold disabled:opacity-50"
           />
@@ -105,9 +105,11 @@ function MessageBubble({ message }: MessageBubbleProps) {
   const { fen, setCoachHighlightSquares, deleteCoachMessage } = useAppStore()
 
   // Patterns for chess notation detection
-  const sanPattern = /\b([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?|O-O(?:-O)?|[a-h][1-8](?:=[QRBN])?)\+?\#?\b/g
+  const sanPattern =
+    /\b([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?|O-O(?:-O)?|[a-h][1-8](?:=[QRBN])?)\+?#?\b/g
   const squarePattern = /\b([a-h][1-8])\b/g
-  const piecePattern = /\b(pawn|knight|bishop|rook|queen|king)\s+(?:on\s+)?([a-h][1-8])\b|\b([a-h][1-8])\s+(pawn|knight|bishop|rook|queen|king)\b/gi
+  const piecePattern =
+    /\b(pawn|knight|bishop|rook|queen|king)\s+(?:on\s+)?([a-h][1-8])\b|\b([a-h][1-8])\s+(pawn|knight|bishop|rook|queen|king)\b/gi
 
   // Handle click on chess notation
   const handleNotationClick = (notation: string) => {
@@ -129,13 +131,13 @@ function MessageBubble({ message }: MessageBubbleProps) {
 
     const parts: (string | JSX.Element)[] = []
     let lastIndex = 0
-    
+
     // Combine all patterns
     const allMatches: Array<{ index: number; length: number; text: string }> = []
-    
+
     // Find SAN moves
     const sanMatches = Array.from(children.matchAll(sanPattern))
-    sanMatches.forEach(match => {
+    sanMatches.forEach((match) => {
       if (match.index !== undefined) {
         allMatches.push({
           index: match.index,
@@ -144,13 +146,13 @@ function MessageBubble({ message }: MessageBubbleProps) {
         })
       }
     })
-    
+
     // Find squares (but exclude if already matched as part of SAN)
     const squareMatches = Array.from(children.matchAll(squarePattern))
-    squareMatches.forEach(match => {
+    squareMatches.forEach((match) => {
       if (match.index !== undefined) {
-        const isPartOfSan = allMatches.some(m => 
-          match.index! >= m.index && match.index! < m.index + m.length
+        const isPartOfSan = allMatches.some(
+          (m) => match.index! >= m.index && match.index! < m.index + m.length
         )
         if (!isPartOfSan) {
           allMatches.push({
@@ -161,13 +163,13 @@ function MessageBubble({ message }: MessageBubbleProps) {
         }
       }
     })
-    
+
     // Find piece references
     const pieceMatches = Array.from(children.matchAll(piecePattern))
-    pieceMatches.forEach(match => {
+    pieceMatches.forEach((match) => {
       if (match.index !== undefined) {
-        const isPartOfSan = allMatches.some(m => 
-          match.index! >= m.index && match.index! < m.index + m.length
+        const isPartOfSan = allMatches.some(
+          (m) => match.index! >= m.index && match.index! < m.index + m.length
         )
         if (!isPartOfSan) {
           allMatches.push({
@@ -178,28 +180,28 @@ function MessageBubble({ message }: MessageBubbleProps) {
         }
       }
     })
-    
+
     // Sort by index
     allMatches.sort((a, b) => a.index - b.index)
-    
+
     // Remove overlapping matches (keep first)
     const filteredMatches: typeof allMatches = []
     for (const match of allMatches) {
-      const overlaps = filteredMatches.some(m => 
-        match.index < m.index + m.length && match.index + match.length > m.index
+      const overlaps = filteredMatches.some(
+        (m) => match.index < m.index + m.length && match.index + match.length > m.index
       )
       if (!overlaps) {
         filteredMatches.push(match)
       }
     }
-    
+
     // Build parts array
-    filteredMatches.forEach(match => {
+    filteredMatches.forEach((match) => {
       // Add text before match
       if (match.index > lastIndex) {
         parts.push(children.slice(lastIndex, match.index))
       }
-      
+
       // Add clickable match
       const notation = match.text
       parts.push(
@@ -212,26 +214,23 @@ function MessageBubble({ message }: MessageBubbleProps) {
           {notation}
         </span>
       )
-      
+
       lastIndex = match.index + match.length
     })
-    
+
     // Add remaining text
     if (lastIndex < children.length) {
       parts.push(children.slice(lastIndex))
     }
-    
+
     return <>{parts.length > 0 ? parts : children}</>
   }
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
       <div
-        className={`relative max-w-[90%] rounded-lg px-3 py-2 ${
-          isUser
-            ? 'bg-accent-gold/20 text-accent-gold'
-            : 'bg-surface-700 text-gray-200'
-        }`}
+        className={`relative max-w-[90%] rounded-lg px-3 py-2 ${isUser ? 'bg-accent-gold/20 text-accent-gold' : 'bg-surface-700 text-gray-200'
+          }`}
       >
         {/* Delete button - show on hover */}
         <button
@@ -241,7 +240,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
         >
           <Trash2 size={12} className="text-gray-300" />
         </button>
-        
+
         {isUser && message.analysisType && (
           <span className="text-xs opacity-70 block mb-1">
             {getAnalysisTypeLabel(message.analysisType as AnalysisType)}
@@ -255,18 +254,22 @@ function MessageBubble({ message }: MessageBubbleProps) {
               components={{
                 // Headings
                 h1: ({ children }) => (
-                  <h1 className="text-base font-bold text-accent-gold mt-3 mb-2 first:mt-0">{children}</h1>
+                  <h1 className="text-base font-bold text-accent-gold mt-3 mb-2 first:mt-0">
+                    {children}
+                  </h1>
                 ),
                 h2: ({ children }) => (
-                  <h2 className="text-base font-bold text-accent-gold mt-3 mb-2 first:mt-0">{children}</h2>
+                  <h2 className="text-base font-bold text-accent-gold mt-3 mb-2 first:mt-0">
+                    {children}
+                  </h2>
                 ),
                 h3: ({ children }) => (
-                  <h3 className="text-sm font-bold text-accent-gold mt-2 mb-1 first:mt-0">{children}</h3>
+                  <h3 className="text-sm font-bold text-accent-gold mt-2 mb-1 first:mt-0">
+                    {children}
+                  </h3>
                 ),
                 // Paragraphs
-                p: ({ children }) => (
-                  <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>
-                ),
+                p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
                 // Lists
                 ul: ({ children }) => (
                   <ul className="list-disc list-outside ml-4 mb-2 space-y-1">{children}</ul>
@@ -274,9 +277,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
                 ol: ({ children }) => (
                   <ol className="list-decimal list-outside ml-4 mb-2 space-y-1">{children}</ol>
                 ),
-                li: ({ children }) => (
-                  <li className="leading-relaxed">{children}</li>
-                ),
+                li: ({ children }) => <li className="leading-relaxed">{children}</li>,
                 // Inline code (chess moves, etc.)
                 code: ({ children }) => (
                   <code className="bg-surface-600 text-accent-gold px-1.5 py-0.5 rounded text-xs font-mono">
@@ -294,9 +295,7 @@ function MessageBubble({ message }: MessageBubbleProps) {
                   <strong className="font-semibold text-white">{children}</strong>
                 ),
                 // Emphasis
-                em: ({ children }) => (
-                  <em className="italic text-gray-300">{children}</em>
-                ),
+                em: ({ children }) => <em className="italic text-gray-300">{children}</em>,
                 // Blockquotes
                 blockquote: ({ children }) => (
                   <blockquote className="border-l-2 border-accent-gold pl-3 my-2 text-gray-300 italic">
@@ -304,16 +303,14 @@ function MessageBubble({ message }: MessageBubbleProps) {
                   </blockquote>
                 ),
                 // Horizontal rule
-                hr: () => (
-                  <hr className="border-surface-600 my-3" />
-                ),
+                hr: () => <hr className="border-surface-600 my-3" />,
                 // Text - make chess notation clickable
                 text: ({ children }) => {
                   if (typeof children === 'string') {
                     return <InteractiveText>{children}</InteractiveText>
                   }
                   return <>{children}</>
-                },
+                }
               }}
             >
               {message.content}

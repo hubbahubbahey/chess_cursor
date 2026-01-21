@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from './stores/useAppStore'
-import { Bot, Swords, MessageCircle, ChevronRight, GraduationCap, ChevronLeft, Trash2, Settings, Zap, Target, AlertCircle, Lightbulb, Wifi, WifiOff, X, Check } from 'lucide-react'
+import {
+  Bot,
+  Swords,
+  MessageCircle,
+  ChevronRight,
+  GraduationCap,
+  ChevronLeft,
+  Trash2,
+  Settings,
+  Zap,
+  Target,
+  AlertCircle,
+  Lightbulb,
+  Wifi,
+  WifiOff,
+  X,
+  Check
+} from 'lucide-react'
 import Sidebar from './components/Sidebar'
 import ChessBoard from './components/ChessBoard'
 import OpeningTree from './components/OpeningTree'
@@ -15,10 +32,10 @@ import Accordion from './components/Accordion'
 import { AnalysisType } from './lib/coachContext'
 
 function App() {
-  const { 
-    currentView, 
-    loadOpenings, 
-    currentOpening, 
+  const {
+    currentView,
+    loadOpenings,
+    currentOpening,
     aiEnabled,
     coachPanelOpen,
     coachConnected,
@@ -46,6 +63,7 @@ function App() {
   }, [coachPanelOpen, checkCoachConnection])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTempEndpoint(coachSettings.endpoint)
   }, [coachSettings.endpoint])
 
@@ -107,11 +125,12 @@ function App() {
                   </div>
 
                   {/* Connection status */}
-                  <div className={`rounded-lg p-2.5 text-xs ${
-                    coachConnected 
-                      ? 'bg-green-400/10 border border-green-400/20' 
+                  <div
+                    className={`rounded-lg p-2.5 text-xs ${coachConnected
+                      ? 'bg-green-400/10 border border-green-400/20'
                       : 'bg-red-400/10 border border-red-400/20'
-                  }`}>
+                      }`}
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         {coachConnected ? (
@@ -212,19 +231,11 @@ function App() {
 
                 {/* Accordion sections */}
                 <div className="flex-1 flex flex-col gap-4 p-4 overflow-hidden min-h-0">
-                  <Accordion
-                    title="AI Opponent"
-                    icon={<Bot size={18} />}
-                    defaultOpen={true}
-                  >
+                  <Accordion title="AI Opponent" icon={<Bot size={18} />} defaultOpen={true}>
                     <AiControlPanel />
                   </Accordion>
                   {aiEnabled ? (
-                    <Accordion
-                      title="Game Moves"
-                      icon={<Swords size={18} />}
-                      defaultOpen={true}
-                    >
+                    <Accordion title="Game Moves" icon={<Swords size={18} />} defaultOpen={true}>
                       <GameMoveList />
                     </Accordion>
                   ) : (
@@ -275,8 +286,8 @@ function App() {
                 Welcome to Chess Opening Trainer
               </h2>
               <p className="text-gray-400 max-w-md">
-                Select an opening from the sidebar to begin exploring openings,
-                or start a training session to practice your moves.
+                Select an opening from the sidebar to begin exploring openings, or start a training
+                session to practice your moves.
               </p>
             </div>
           </div>
@@ -288,13 +299,9 @@ function App() {
     <div className="h-screen flex flex-col bg-surface-900">
       {/* Title bar drag region */}
       <div className="h-8 drag-region bg-surface-800/50 flex items-center px-4">
-        <span className="no-drag text-sm text-gray-500 font-display">
-          Chess Opening Trainer
-        </span>
+        <span className="no-drag text-sm text-gray-500 font-display">Chess Opening Trainer</span>
         {currentOpening && (
-          <span className="no-drag ml-4 text-sm text-accent-gold">
-            {currentOpening.name}
-          </span>
+          <span className="no-drag ml-4 text-sm text-accent-gold">{currentOpening.name}</span>
         )}
       </div>
 

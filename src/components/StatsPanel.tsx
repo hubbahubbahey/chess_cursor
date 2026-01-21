@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAppStore, Stats, Position } from '../stores/useAppStore'
 import { getMasteryLevel } from '../lib/srs'
-import { 
-  BarChart3, 
-  TrendingUp, 
-  Target, 
-  Calendar,
-  CheckCircle2,
-  XCircle,
-  Clock
-} from 'lucide-react'
+import { BarChart3, TrendingUp, Target, Calendar, CheckCircle2, Clock } from 'lucide-react'
 
 interface PositionStats extends Stats {
   position?: Position
@@ -19,7 +11,9 @@ interface PositionStats extends Stats {
 export default function StatsPanel() {
   const { currentOpening, positions } = useAppStore()
   const [stats, setStats] = useState<PositionStats[]>([])
-  const [reviews, setReviews] = useState<{ position_id: number; repetitions: number; ease_factor: number }[]>([])
+  /* const [reviews, setReviews] = useState<
+    { position_id: number; repetitions: number; ease_factor: number }[]
+  >([]) */
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -27,29 +21,29 @@ export default function StatsPanel() {
       setLoading(true)
       try {
         const allStats = await window.electronAPI.getAllStats()
-        
+
         // Get review data for mastery levels
-        const reviewPromises = allStats.map(s => 
-          window.electronAPI.getReview(s.position_id)
-        )
+        const reviewPromises = allStats.map((s) => window.electronAPI.getReview(s.position_id))
         const reviewResults = await Promise.all(reviewPromises)
-        
+
         // Combine stats with position data and mastery
-        const enrichedStats = allStats.map((s, i) => {
-          const position = positions.find(p => p.id === s.position_id)
-          const review = reviewResults[i]
-          const mastery = review ? getMasteryLevel(review.repetitions, review.ease_factor) : undefined
-          return {
-            ...s,
-            position,
-            mastery
-          }
-        }).filter(s => 
-          !currentOpening || s.position?.opening_id === currentOpening.id
-        )
+        const enrichedStats = allStats
+          .map((s, i) => {
+            const position = positions.find((p) => p.id === s.position_id)
+            const review = reviewResults[i]
+            const mastery = review
+              ? getMasteryLevel(review.repetitions, review.ease_factor)
+              : undefined
+            return {
+              ...s,
+              position,
+              mastery
+            }
+          })
+          .filter((s) => !currentOpening || s.position?.opening_id === currentOpening.id)
 
         setStats(enrichedStats)
-        setReviews(reviewResults.filter(r => r) as typeof reviews)
+        // setReviews(reviewResults.filter((r) => r) as typeof reviews)
       } catch (error) {
         console.error('Failed to load stats:', error)
       }
@@ -65,14 +59,14 @@ export default function StatsPanel() {
   const accuracy = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0
 
   const masteryBreakdown = {
-    new: stats.filter(s => s.mastery?.level === 'new').length,
-    learning: stats.filter(s => s.mastery?.level === 'learning').length,
-    reviewing: stats.filter(s => s.mastery?.level === 'reviewing').length,
-    mastered: stats.filter(s => s.mastery?.level === 'mastered').length
+    new: stats.filter((s) => s.mastery?.level === 'new').length,
+    learning: stats.filter((s) => s.mastery?.level === 'learning').length,
+    reviewing: stats.filter((s) => s.mastery?.level === 'reviewing').length,
+    mastered: stats.filter((s) => s.mastery?.level === 'mastered').length
   }
 
-  const totalPositions = currentOpening 
-    ? positions.filter(p => p.opening_id === currentOpening.id).length
+  const totalPositions = currentOpening
+    ? positions.filter((p) => p.opening_id === currentOpening.id).length
     : positions.length
 
   if (loading) {
@@ -94,9 +88,7 @@ export default function StatsPanel() {
           <h2 className="font-display text-3xl text-white mb-2">
             {currentOpening ? `${currentOpening.name} Statistics` : 'Overall Statistics'}
           </h2>
-          <p className="text-gray-500">
-            Track your progress and identify areas for improvement
-          </p>
+          <p className="text-gray-500">Track your progress and identify areas for improvement</p>
         </div>
 
         {/* Summary cards */}
@@ -122,9 +114,7 @@ export default function StatsPanel() {
               <span className="text-gray-400 text-sm">Mastered</span>
             </div>
             <p className="text-3xl font-bold text-white">{masteryBreakdown.mastered}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              of {totalPositions} positions
-            </p>
+            <p className="text-sm text-gray-500 mt-1">of {totalPositions} positions</p>
           </div>
 
           <div className="bg-surface-800 rounded-xl p-5">
@@ -137,9 +127,7 @@ export default function StatsPanel() {
             <p className="text-3xl font-bold text-white">
               {masteryBreakdown.learning + masteryBreakdown.reviewing}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              positions in progress
-            </p>
+            <p className="text-sm text-gray-500 mt-1">positions in progress</p>
           </div>
 
           <div className="bg-surface-800 rounded-xl p-5">
@@ -150,9 +138,7 @@ export default function StatsPanel() {
               <span className="text-gray-400 text-sm">New</span>
             </div>
             <p className="text-3xl font-bold text-white">{masteryBreakdown.new}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              positions to learn
-            </p>
+            <p className="text-sm text-gray-500 mt-1">positions to learn</p>
           </div>
         </div>
 
@@ -162,7 +148,7 @@ export default function StatsPanel() {
             <BarChart3 size={20} className="text-accent-gold" />
             Mastery Breakdown
           </h3>
-          
+
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between text-sm mb-1">
@@ -170,9 +156,11 @@ export default function StatsPanel() {
                 <span className="text-white">{masteryBreakdown.new}</span>
               </div>
               <div className="h-3 bg-surface-700 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-gray-500 transition-all duration-500"
-                  style={{ width: `${totalPositions > 0 ? (masteryBreakdown.new / totalPositions) * 100 : 0}%` }}
+                  style={{
+                    width: `${totalPositions > 0 ? (masteryBreakdown.new / totalPositions) * 100 : 0}%`
+                  }}
                 />
               </div>
             </div>
@@ -183,9 +171,11 @@ export default function StatsPanel() {
                 <span className="text-white">{masteryBreakdown.learning}</span>
               </div>
               <div className="h-3 bg-surface-700 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-yellow-500 transition-all duration-500"
-                  style={{ width: `${totalPositions > 0 ? (masteryBreakdown.learning / totalPositions) * 100 : 0}%` }}
+                  style={{
+                    width: `${totalPositions > 0 ? (masteryBreakdown.learning / totalPositions) * 100 : 0}%`
+                  }}
                 />
               </div>
             </div>
@@ -196,9 +186,11 @@ export default function StatsPanel() {
                 <span className="text-white">{masteryBreakdown.reviewing}</span>
               </div>
               <div className="h-3 bg-surface-700 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-blue-500 transition-all duration-500"
-                  style={{ width: `${totalPositions > 0 ? (masteryBreakdown.reviewing / totalPositions) * 100 : 0}%` }}
+                  style={{
+                    width: `${totalPositions > 0 ? (masteryBreakdown.reviewing / totalPositions) * 100 : 0}%`
+                  }}
                 />
               </div>
             </div>
@@ -209,9 +201,11 @@ export default function StatsPanel() {
                 <span className="text-white">{masteryBreakdown.mastered}</span>
               </div>
               <div className="h-3 bg-surface-700 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-green-500 transition-all duration-500"
-                  style={{ width: `${totalPositions > 0 ? (masteryBreakdown.mastered / totalPositions) * 100 : 0}%` }}
+                  style={{
+                    width: `${totalPositions > 0 ? (masteryBreakdown.mastered / totalPositions) * 100 : 0}%`
+                  }}
                 />
               </div>
             </div>
@@ -232,20 +226,32 @@ export default function StatsPanel() {
                 <thead>
                   <tr className="bg-surface-700">
                     <th className="text-left text-sm text-gray-400 font-medium px-4 py-3">Move</th>
-                    <th className="text-left text-sm text-gray-400 font-medium px-4 py-3">Status</th>
-                    <th className="text-right text-sm text-gray-400 font-medium px-4 py-3">Attempts</th>
-                    <th className="text-right text-sm text-gray-400 font-medium px-4 py-3">Correct</th>
-                    <th className="text-right text-sm text-gray-400 font-medium px-4 py-3">Accuracy</th>
-                    <th className="text-left text-sm text-gray-400 font-medium px-4 py-3">Last Practice</th>
+                    <th className="text-left text-sm text-gray-400 font-medium px-4 py-3">
+                      Status
+                    </th>
+                    <th className="text-right text-sm text-gray-400 font-medium px-4 py-3">
+                      Attempts
+                    </th>
+                    <th className="text-right text-sm text-gray-400 font-medium px-4 py-3">
+                      Correct
+                    </th>
+                    <th className="text-right text-sm text-gray-400 font-medium px-4 py-3">
+                      Accuracy
+                    </th>
+                    <th className="text-left text-sm text-gray-400 font-medium px-4 py-3">
+                      Last Practice
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {stats.slice(0, 20).map((stat) => {
-                    const posAccuracy = stat.attempts > 0 
-                      ? Math.round((stat.correct / stat.attempts) * 100) 
-                      : 0
+                    const posAccuracy =
+                      stat.attempts > 0 ? Math.round((stat.correct / stat.attempts) * 100) : 0
                     return (
-                      <tr key={stat.id} className="border-t border-surface-700 hover:bg-surface-700/50">
+                      <tr
+                        key={stat.id}
+                        className="border-t border-surface-700 hover:bg-surface-700/50"
+                      >
                         <td className="px-4 py-3">
                           <span className="font-mono text-accent-gold">
                             {stat.position?.move_san || '—'}
@@ -253,36 +259,39 @@ export default function StatsPanel() {
                         </td>
                         <td className="px-4 py-3">
                           {stat.mastery && (
-                            <span className={`badge ${
-                              stat.mastery.level === 'mastered' ? 'badge-emerald' :
-                              stat.mastery.level === 'reviewing' ? 'bg-blue-500/20 text-blue-400' :
-                              stat.mastery.level === 'learning' ? 'badge-gold' :
-                              'bg-gray-500/20 text-gray-400'
-                            }`}>
+                            <span
+                              className={`badge ${stat.mastery.level === 'mastered'
+                                ? 'badge-emerald'
+                                : stat.mastery.level === 'reviewing'
+                                  ? 'bg-blue-500/20 text-blue-400'
+                                  : stat.mastery.level === 'learning'
+                                    ? 'badge-gold'
+                                    : 'bg-gray-500/20 text-gray-400'
+                                }`}
+                            >
                               {stat.mastery.label}
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-white">
-                          {stat.attempts}
-                        </td>
-                        <td className="px-4 py-3 text-right text-white">
-                          {stat.correct}
-                        </td>
+                        <td className="px-4 py-3 text-right text-white">{stat.attempts}</td>
+                        <td className="px-4 py-3 text-right text-white">{stat.correct}</td>
                         <td className="px-4 py-3 text-right">
-                          <span className={
-                            posAccuracy >= 80 ? 'text-accent-emerald' :
-                            posAccuracy >= 50 ? 'text-accent-gold' :
-                            'text-accent-ruby'
-                          }>
+                          <span
+                            className={
+                              posAccuracy >= 80
+                                ? 'text-accent-emerald'
+                                : posAccuracy >= 50
+                                  ? 'text-accent-gold'
+                                  : 'text-accent-ruby'
+                            }
+                          >
                             {posAccuracy}%
                           </span>
                         </td>
                         <td className="px-4 py-3 text-gray-500 text-sm">
-                          {stat.last_attempt 
+                          {stat.last_attempt
                             ? new Date(stat.last_attempt).toLocaleDateString()
-                            : '—'
-                          }
+                            : '—'}
                         </td>
                       </tr>
                     )
