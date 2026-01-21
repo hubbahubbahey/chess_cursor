@@ -69,6 +69,10 @@ interface AppState {
   // Navigation
   currentView: ViewType
   setCurrentView: (view: ViewType) => void
+  
+  // Sidebar
+  sidebarCollapsed: boolean
+  toggleSidebar: () => void
 
   // Chess game state
   game: Chess
@@ -131,8 +135,11 @@ interface AppState {
   coachConnected: boolean
   coachPanelOpen: boolean
   coachSettings: CoachSettings
+  coachHighlightSquares: string[]
   toggleCoachPanel: () => void
   clearCoachHistory: () => void
+  setCoachHighlightSquares: (squares: string[]) => void
+  deleteCoachMessage: (messageId: string) => void
   checkCoachConnection: () => Promise<void>
   updateCoachSettings: (settings: Partial<CoachSettings>) => Promise<void>
   askCoach: (analysisType: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom', customQuestion?: string) => Promise<void>
@@ -142,6 +149,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Navigation
   currentView: 'explore',
   setCurrentView: (view) => set({ currentView: view }),
+  
+  // Sidebar
+  sidebarCollapsed: true,
+  toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
   // Chess game state
   game: new Chess(),
@@ -419,9 +430,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       console.log('AI received move from Stockfish:', bestMove)
       
-      // Parse and execute the move
+      // Parse the move
       const { from, to, promotion } = parseUciMove(bestMove)
       console.log('Parsed move:', { from, to, promotion })
+      
+      // Add a delay before executing the move to make it feel less rushed
+      await new Promise(resolve => setTimeout(resolve, 800))
       
       // Get the current state again (in case it changed while thinking)
       const currentState = get()
@@ -451,10 +465,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     endpoint: 'http://192.168.1.155:1234/v1/chat/completions',
     model: 'local-model'
   },
+  coachHighlightSquares: [],
 
   toggleCoachPanel: () => set(state => ({ coachPanelOpen: !state.coachPanelOpen })),
 
   clearCoachHistory: () => set({ coachMessages: [] }),
+
+  setCoachHighlightSquares: (squares) => set({ coachHighlightSquares: squares }),
+
+  deleteCoachMessage: (messageId) => set(state => ({
+    coachMessages: state.coachMessages.filter(msg => msg.id !== messageId)
+  })),
 
   checkCoachConnection: async () => {
     try {
@@ -481,7 +502,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { fen, moveHistory, currentOpening, aiColor, aiEnabled, coachMessages } = get()
 
     // Determine player color
-    const playerColor = aiEnabled ? (aiColor === 'white' ? 'black' : 'white') : undefined
+    // If AI is enabled, player is opposite of AI
+    // If AI is not enabled, use opening color if available, otherwise default to white
+    let playerColor: 'white' | 'black' | undefined
+    if (aiEnabled) {
+      playerColor = aiColor === 'white' ? 'black' : 'white'
+    } else if (currentOpening) {
+      playerColor = currentOpening.color
+    } else {
+      // Default to white when no other indication is available
+      playerColor = 'white'
+    }
 
     // Create user message immediately
     const userMessage: CoachMessage = {

@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useAppStore } from '../stores/useAppStore'
-import { GraduationCap, Loader2, Send } from 'lucide-react'
+import { GraduationCap, Loader2, Send, Trash2 } from 'lucide-react'
 import { AnalysisType, getAnalysisTypeLabel } from '../lib/coachContext'
+import { parseChessNotation } from '../lib/chess'
 
 export default function CoachChatPanel() {
   const {
@@ -10,7 +11,9 @@ export default function CoachChatPanel() {
     coachLoading,
     coachConnected,
     coachPanelOpen,
-    askCoach
+    askCoach,
+    fen,
+    setCoachHighlightSquares
   } = useAppStore()
 
   const [customQuestion, setCustomQuestion] = useState('')
@@ -35,9 +38,9 @@ export default function CoachChatPanel() {
   }
 
   return (
-    <div className="flex-1 bg-surface-800 rounded-xl overflow-hidden flex flex-col min-h-0">
+    <div className="h-full bg-surface-800 rounded-xl overflow-hidden flex flex-col min-h-0">
       {/* Messages area */}
-      <div className="flex-1 scrollable-panel p-4 space-y-4 min-h-0">
+      <div className="flex-1 scrollable-panel p-4 space-y-4 min-h-0 overflow-auto">
         {coachMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-4">
             <GraduationCap size={40} className="text-gray-600 mb-3" />
@@ -99,16 +102,146 @@ interface MessageBubbleProps {
 
 function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user'
+  const { fen, setCoachHighlightSquares, deleteCoachMessage } = useAppStore()
+
+  // Patterns for chess notation detection
+  const sanPattern = /\b([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[QRBN])?|O-O(?:-O)?|[a-h][1-8](?:=[QRBN])?)\+?\#?\b/g
+  const squarePattern = /\b([a-h][1-8])\b/g
+  const piecePattern = /\b(pawn|knight|bishop|rook|queen|king)\s+(?:on\s+)?([a-h][1-8])\b|\b([a-h][1-8])\s+(pawn|knight|bishop|rook|queen|king)\b/gi
+
+  // Handle click on chess notation
+  const handleNotationClick = (notation: string) => {
+    const squares = parseChessNotation(notation, fen)
+    if (squares.length > 0) {
+      setCoachHighlightSquares(squares)
+      // Auto-clear after 5 seconds
+      setTimeout(() => {
+        setCoachHighlightSquares([])
+      }, 5000)
+    }
+  }
+
+  // Custom text component that makes chess notation clickable
+  const InteractiveText = ({ children }: { children: string }) => {
+    if (typeof children !== 'string') {
+      return <>{children}</>
+    }
+
+    const parts: (string | JSX.Element)[] = []
+    let lastIndex = 0
+    
+    // Combine all patterns
+    const allMatches: Array<{ index: number; length: number; text: string }> = []
+    
+    // Find SAN moves
+    const sanMatches = Array.from(children.matchAll(sanPattern))
+    sanMatches.forEach(match => {
+      if (match.index !== undefined) {
+        allMatches.push({
+          index: match.index,
+          length: match[0].length,
+          text: match[0]
+        })
+      }
+    })
+    
+    // Find squares (but exclude if already matched as part of SAN)
+    const squareMatches = Array.from(children.matchAll(squarePattern))
+    squareMatches.forEach(match => {
+      if (match.index !== undefined) {
+        const isPartOfSan = allMatches.some(m => 
+          match.index! >= m.index && match.index! < m.index + m.length
+        )
+        if (!isPartOfSan) {
+          allMatches.push({
+            index: match.index,
+            length: match[0].length,
+            text: match[0]
+          })
+        }
+      }
+    })
+    
+    // Find piece references
+    const pieceMatches = Array.from(children.matchAll(piecePattern))
+    pieceMatches.forEach(match => {
+      if (match.index !== undefined) {
+        const isPartOfSan = allMatches.some(m => 
+          match.index! >= m.index && match.index! < m.index + m.length
+        )
+        if (!isPartOfSan) {
+          allMatches.push({
+            index: match.index,
+            length: match[0].length,
+            text: match[0]
+          })
+        }
+      }
+    })
+    
+    // Sort by index
+    allMatches.sort((a, b) => a.index - b.index)
+    
+    // Remove overlapping matches (keep first)
+    const filteredMatches: typeof allMatches = []
+    for (const match of allMatches) {
+      const overlaps = filteredMatches.some(m => 
+        match.index < m.index + m.length && match.index + match.length > m.index
+      )
+      if (!overlaps) {
+        filteredMatches.push(match)
+      }
+    }
+    
+    // Build parts array
+    filteredMatches.forEach(match => {
+      // Add text before match
+      if (match.index > lastIndex) {
+        parts.push(children.slice(lastIndex, match.index))
+      }
+      
+      // Add clickable match
+      const notation = match.text
+      parts.push(
+        <span
+          key={`notation-${match.index}`}
+          onClick={() => handleNotationClick(notation)}
+          className="text-accent-gold underline decoration-dotted cursor-pointer hover:text-accent-gold/80 transition-colors"
+          title="Click to highlight on board"
+        >
+          {notation}
+        </span>
+      )
+      
+      lastIndex = match.index + match.length
+    })
+    
+    // Add remaining text
+    if (lastIndex < children.length) {
+      parts.push(children.slice(lastIndex))
+    }
+    
+    return <>{parts.length > 0 ? parts : children}</>
+  }
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group`}>
       <div
-        className={`max-w-[90%] rounded-lg px-3 py-2 ${
+        className={`relative max-w-[90%] rounded-lg px-3 py-2 ${
           isUser
             ? 'bg-accent-gold/20 text-accent-gold'
             : 'bg-surface-700 text-gray-200'
         }`}
       >
+        {/* Delete button - show on hover */}
+        <button
+          onClick={() => deleteCoachMessage(message.id)}
+          className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-surface-800 hover:bg-red-600 rounded-full p-1.5 shadow-lg z-10"
+          title="Delete message"
+        >
+          <Trash2 size={12} className="text-gray-300" />
+        </button>
+        
         {isUser && message.analysisType && (
           <span className="text-xs opacity-70 block mb-1">
             {getAnalysisTypeLabel(message.analysisType as AnalysisType)}
@@ -174,6 +307,13 @@ function MessageBubble({ message }: MessageBubbleProps) {
                 hr: () => (
                   <hr className="border-surface-600 my-3" />
                 ),
+                // Text - make chess notation clickable
+                text: ({ children }) => {
+                  if (typeof children === 'string') {
+                    return <InteractiveText>{children}</InteractiveText>
+                  }
+                  return <>{children}</>
+                },
               }}
             >
               {message.content}
