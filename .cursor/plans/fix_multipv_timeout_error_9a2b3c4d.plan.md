@@ -4,10 +4,10 @@ overview: Fix the "topMovesReject is not a function" error that occurs when the 
 todos:
   - id: fix-timeout-handler
     content: Fix timeout handler in getTopMoves to save reject reference before calling stopCalculation
-    status: pending
+    status: completed
   - id: fix-stop-calculation
     content: Update stopCalculation to not clear topMovesReject if it's being used by timeout handler
-    status: pending
+    status: completed
 isProject: false
 ---
 

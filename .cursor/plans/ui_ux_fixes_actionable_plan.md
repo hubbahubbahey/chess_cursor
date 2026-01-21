@@ -4,22 +4,22 @@ overview: Fix specific UI/UX issues identified from the application interface in
 todos:
   - id: remove-redundant-lm-status
     content: Remove redundant "LM Studio not connected" message from CoachChatPanel empty state when CoachPanel is open
-    status: pending
+    status: completed
   - id: improve-white-tag-clarity
     content: Improve clarity of "White"/"Black" tags in openings list with better labels and tooltips
-    status: pending
+    status: completed
   - id: fix-visual-artifacts
     content: Fix overlapping text and floating dropdown arrows behind chess board
-    status: pending
+    status: completed
   - id: consolidate-refresh-buttons
     content: Review and consolidate refresh buttons in AI Coach panel to avoid redundancy
-    status: pending
+    status: completed
   - id: improve-connection-status-ui
     content: Improve connection status display with better visual hierarchy and actionable buttons
-    status: pending
+    status: completed
   - id: add-dismissible-notification
     content: Create dismissible notification system for connection status instead of persistent popups
-    status: pending
+    status: cancelled
 isProject: false
 ---
 

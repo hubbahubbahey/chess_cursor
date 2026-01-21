@@ -158,7 +158,7 @@ export default function Sidebar() {
                         className={`badge ${
                           opening.color === 'white' ? 'bg-white/10 text-white' : 'bg-black/30 text-gray-300'
                         }`}
-                        title={`This opening is played as ${opening.color === 'white' ? 'White' : 'Black'}`}
+                        title={`You play as ${opening.color === 'white' ? 'White' : 'Black'} in this opening`}
                       >
                         Play as {opening.color === 'white' ? 'White' : 'Black'}
                       </span>

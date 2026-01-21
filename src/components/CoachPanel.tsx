@@ -104,37 +104,43 @@ export default function CoachPanel() {
         </div>
 
         {/* Connection status */}
-        <div className="flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            {coachConnected ? (
-              <>
-                <Wifi size={14} className="text-green-400" />
-                <span className="text-green-400 font-medium">LM Studio connected</span>
-              </>
-            ) : (
-              <>
-                <WifiOff size={14} className="text-red-400" />
-                <span className="text-red-400 font-medium">LM Studio not connected</span>
-              </>
-            )}
+        <div className={`rounded-lg p-2.5 text-xs ${
+          coachConnected 
+            ? 'bg-green-400/10 border border-green-400/20' 
+            : 'bg-red-400/10 border border-red-400/20'
+        }`}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              {coachConnected ? (
+                <>
+                  <Wifi size={14} className="text-green-400" />
+                  <span className="text-green-400 font-medium">Connected</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff size={14} className="text-red-400" />
+                  <span className="text-red-400 font-medium">Not Connected</span>
+                </>
+              )}
+            </div>
+            <button
+              onClick={checkCoachConnection}
+              className="px-2 py-1 text-gray-400 hover:text-gray-300 hover:bg-surface-700/50 rounded transition-colors text-xs"
+              title="Check connection status"
+            >
+              Check
+            </button>
           </div>
-          <button
-            onClick={checkCoachConnection}
-            className="px-2 py-1 text-gray-400 hover:text-gray-300 hover:bg-surface-700 rounded transition-colors"
-            title="Check connection status"
-          >
-            Refresh
-          </button>
+          {!coachConnected && (
+            <button
+              onClick={() => setShowSettings(true)}
+              className="mt-2 w-full px-2 py-1.5 text-xs bg-accent-gold/20 hover:bg-accent-gold/30 text-accent-gold rounded transition-colors text-center font-medium"
+              title="Open settings to configure LM Studio endpoint"
+            >
+              Configure Connection
+            </button>
+          )}
         </div>
-        {!coachConnected && (
-          <button
-            onClick={() => setShowSettings(true)}
-            className="mt-2 w-full px-3 py-1.5 text-xs bg-surface-700 hover:bg-surface-600 text-gray-300 rounded transition-colors text-left"
-            title="Open settings to configure LM Studio endpoint"
-          >
-            Open Settings
-          </button>
-        )}
       </div>
 
       {/* Settings panel (collapsible) */}
