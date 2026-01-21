@@ -5,6 +5,7 @@ import {
   HelpCircle, 
   BarChart3, 
   ChevronRight,
+  ChevronLeft,
   Crown
 } from 'lucide-react'
 
@@ -21,11 +22,69 @@ export default function Sidebar() {
     setCurrentView, 
     openings, 
     currentOpening, 
-    selectOpening 
+    selectOpening,
+    sidebarCollapsed,
+    toggleSidebar
   } = useAppStore()
 
+  // Collapsed state - show icon-only navigation
+  if (sidebarCollapsed) {
+    return (
+      <aside className="w-12 bg-surface-800 border-r border-surface-700 flex flex-col min-h-0 overflow-hidden transition-all duration-300">
+        {/* Toggle button */}
+        <div className="p-2 border-b border-surface-700 flex-shrink-0">
+          <button
+            onClick={toggleSidebar}
+            className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-surface-700 transition-colors"
+            title="Expand sidebar"
+          >
+            <ChevronRight size={18} className="text-gray-400" />
+          </button>
+        </div>
+
+        {/* Icon-only navigation */}
+        <nav className="p-2 flex-1 min-h-0 overflow-hidden flex flex-col">
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const isActive = currentView === item.id
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => setCurrentView(item.id)}
+                    className={`w-full flex items-center justify-center p-2 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? 'bg-accent-gold/20 text-accent-gold'
+                        : 'text-gray-400 hover:bg-surface-600 hover:text-white'
+                    }`}
+                    title={item.label}
+                  >
+                    <Icon size={18} />
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+      </aside>
+    )
+  }
+
+  // Expanded state - show full sidebar
   return (
-    <aside className="w-64 bg-surface-800 border-r border-surface-700 flex flex-col min-h-0 overflow-hidden">
+    <aside className="w-64 bg-surface-800 border-r border-surface-700 flex flex-col min-h-0 overflow-hidden transition-all duration-300">
+      {/* Toggle button */}
+      <div className="p-3 border-b border-surface-700 flex-shrink-0 flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Menu</span>
+        <button
+          onClick={toggleSidebar}
+          className="p-1.5 rounded-lg hover:bg-surface-700 transition-colors"
+          title="Collapse sidebar"
+        >
+          <ChevronLeft size={16} className="text-gray-400" />
+        </button>
+      </div>
+
       {/* Navigation */}
       <nav className="p-3 border-b border-surface-700 flex-shrink-0">
         <ul className="space-y-1">

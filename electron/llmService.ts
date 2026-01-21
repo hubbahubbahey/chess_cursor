@@ -45,21 +45,26 @@ let currentSettings: CoachSettings = { ...DEFAULT_SETTINGS }
 // Chess coach system prompt
 const SYSTEM_PROMPT = `You are an expert chess coach with a friendly, encouraging teaching style. Your role is to help players improve their chess understanding.
 
+CRITICAL: Always focus your advice ONLY on the side the player is playing. If the player is playing White, only give advice for White moves, plans, and positions. If the player is playing Black, only give advice for Black moves, plans, and positions. Do NOT provide advice for the opponent's side unless specifically asked about what the opponent might do in response.
+
 When analyzing positions:
 - Use standard algebraic notation (e.g., e4, Nf3, O-O)
 - Be specific about piece placements and pawn structures
 - Explain the "why" behind moves and plans
 - Point out tactical and strategic themes
+- Focus ONLY on the player's side (White or Black as specified)
 
 When suggesting moves:
 - Provide your top 1-2 recommendations with clear explanations
+- Only suggest moves for the player's side
 - Consider the player's skill level (assume intermediate)
-- Mention what the opponent might try in response
+- You may mention what the opponent might try in response, but keep the focus on the player's moves
 
 When reviewing for mistakes:
 - Be constructive and educational, not critical
 - Explain what went wrong and why
 - Suggest what the player should look for next time
+- Only analyze mistakes made by the player's side
 
 Keep responses concise but educational. Use bullet points for clarity when appropriate.`
 
@@ -238,33 +243,38 @@ ${boardVisualization ? `\nBoard Visual:\n${boardVisualization}` : ''}
 `.trim()
     : ''
 
+  // Add explicit instruction about player's side
+  const playerSideInstruction = playerColor 
+    ? `\n\nIMPORTANT: The player is playing as ${playerColor}. Only provide advice, moves, and analysis for ${playerColor}. Do NOT give advice for ${playerColor === 'white' ? 'Black' : 'White'}. Focus exclusively on what ${playerColor} should do.`
+    : ''
+
   switch (analysisType) {
     case 'position':
-      return `${stockfishData ? stockfishData + '\n\n' : ''}${positionContext}
+      return `${stockfishData ? stockfishData + '\n\n' : ''}${positionContext}${playerSideInstruction}
 
-Please analyze this position. Who stands better and why? What are the key features of this position (pawn structure, piece activity, king safety, etc.)?${stockfishAnalysis ? ` The engine evaluation suggests ${stockfishAnalysis.evalText}. Explain the strategic reason for this evaluation in 2-3 sentences. Focus on concepts like outpost, development, or pawn structure.` : ''}`
+Please analyze this position from the player's perspective.${playerColor ? ` Focus on ${playerColor}'s position, pieces, and opportunities.` : ''} What are the key features of this position (pawn structure, piece activity, king safety, etc.)?${stockfishAnalysis ? ` The engine evaluation suggests ${stockfishAnalysis.evalText}. Explain the strategic reason for this evaluation in 2-3 sentences from the player's perspective. Focus on concepts like outpost, development, or pawn structure.` : ''}`
 
     case 'moves':
-      return `${stockfishData ? stockfishData + '\n\n' : ''}${positionContext}
+      return `${stockfishData ? stockfishData + '\n\n' : ''}${positionContext}${playerSideInstruction}
 
-What is the best move in this position? Please explain your recommendation and what the main ideas are behind it.${stockfishAnalysis ? ` The engine suggests ${stockfishAnalysis.bestMoveSan} with an evaluation of ${stockfishAnalysis.evalText}. Explain the strategic reason for this move in 2-3 sentences.` : ''}`
+What is the best move for the player in this position?${playerColor ? ` Suggest moves only for ${playerColor}.` : ''} Please explain your recommendation and what the main ideas are behind it.${stockfishAnalysis ? ` The engine suggests ${stockfishAnalysis.bestMoveSan} with an evaluation of ${stockfishAnalysis.evalText}. Explain the strategic reason for this move in 2-3 sentences.` : ''}`
 
     case 'mistakes':
-      return `${positionContext}
+      return `${positionContext}${playerSideInstruction}
 
-Please review the moves played so far. Were there any mistakes or inaccuracies? What could have been played better and why?`
+Please review the moves played so far.${playerColor ? ` Focus only on mistakes made by ${playerColor}.` : ''} Were there any mistakes or inaccuracies? What could have been played better and why?`
 
     case 'plan':
-      return `${positionContext}
+      return `${positionContext}${playerSideInstruction}
 
-What should be the strategic plan in this position? What are the key ideas for both sides?`
+What should be the strategic plan for the player in this position?${playerColor ? ` Focus exclusively on ${playerColor}'s plans and ideas.` : ''} What are the key ideas${playerColor ? ` for ${playerColor}` : ''}?`
 
     case 'custom':
-      return `${positionContext}
+      return `${positionContext}${playerSideInstruction}
 
 ${customQuestion || 'What do you think about this position?'}`
 
     default:
-      return positionContext
+      return positionContext + playerSideInstruction
   }
 }

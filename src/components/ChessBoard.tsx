@@ -50,7 +50,8 @@ export default function ChessBoard({
     aiThinking,
     triggerAiMove,
     game,
-    coachPanelOpen
+    coachPanelOpen,
+    coachHighlightSquares
   } = useAppStore()
 
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null)
@@ -184,11 +185,11 @@ export default function ChessBoard({
         setCurrentPosition(matchingChild)
       }
 
-      // Trigger AI move after player's move (with a small delay for visual feedback)
+      // Trigger AI move after player's move (with a delay for visual feedback)
       if (aiEnabled) {
         setTimeout(() => {
           triggerAiMove()
-        }, 300)
+        }, 600)
       }
     }
     return moveSuccess
@@ -241,8 +242,16 @@ export default function ChessBoard({
       }
     })
 
+    // Coach panel highlights (distinct blue styling)
+    coachHighlightSquares.forEach(square => {
+      styles[square] = {
+        ...styles[square],
+        boxShadow: 'inset 0 0 0 3px rgba(59, 130, 246, 0.6)'
+      }
+    })
+
     return styles
-  }, [legalMoves, selectedSquare, lastMove, highlightSquares])
+  }, [legalMoves, selectedSquare, lastMove, highlightSquares, coachHighlightSquares])
 
   // Use propSize if provided, otherwise use state
   const currentSize = propSize !== undefined ? propSize : boardSize
