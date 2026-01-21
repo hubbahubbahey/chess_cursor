@@ -1,5 +1,9 @@
 # Narrative Saga Contract (Phase 0)
 
+Status:
+- Phase 0 decisions locked for implementation.
+- Repo notes: docs/narrative-saga-phase-0-notes.md.
+
 ## NS-101 — Saga Length + Output Modes
 
 **Decision**
@@ -77,6 +81,11 @@
 | turning_points[].reason/impact | ✅ | ⬜ | ⬜ | Narrative explanation. |
 | closing_reflection | ✅ | ✅ | ⬜ | Closing paragraph. |
 | one_line_lesson | ✅ | ✅ | ✅ | Required for all modes. |
+
+### Validation Summary
+- [x] Every field renders in at least one mode or is explicitly optional/internal.
+- [x] Renderer targets do not require fields missing from the schema.
+- [x] One-Line mode depends only on one_line_lesson.
 
 ### Gaps / Decisions Needed
 - **None identified** in the draft mapping. All fields either render or are explicitly marked as optional/internal.

@@ -52,62 +52,64 @@ export default function Sidebar() {
       </nav>
 
       {/* Opening selection */}
-      <div className="flex-1 p-3 scrollable-panel min-h-0">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 pt-3 flex-shrink-0">
           Openings
         </h3>
-        <ul className="space-y-2">
-          {openings.map((opening) => {
-            const isSelected = currentOpening?.id === opening.id
-            return (
-              <li key={opening.id}>
-                <button
-                  onClick={() => selectOpening(opening)}
-                  className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
-                    isSelected
-                      ? 'bg-surface-600 border border-accent-gold/30'
-                      : 'bg-surface-700 hover:bg-surface-600 border border-transparent'
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <Crown 
-                          size={14} 
-                          className={opening.color === 'white' ? 'text-gray-300' : 'text-gray-600'} 
-                        />
-                        <span className={`font-medium truncate ${
-                          isSelected ? 'text-accent-gold' : 'text-white'
-                        }`}>
-                          {opening.name}
-                        </span>
+        <div className="flex-1 scrollable-panel px-3 pb-3 min-h-0">
+          <ul className="space-y-2">
+            {openings.map((opening) => {
+              const isSelected = currentOpening?.id === opening.id
+              return (
+                <li key={opening.id}>
+                  <button
+                    onClick={() => selectOpening(opening)}
+                    className={`w-full text-left p-3 rounded-lg transition-all duration-200 group ${
+                      isSelected
+                        ? 'bg-surface-600 border border-accent-gold/30'
+                        : 'bg-surface-700 hover:bg-surface-600 border border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Crown 
+                            size={14} 
+                            className={opening.color === 'white' ? 'text-gray-300' : 'text-gray-600'} 
+                          />
+                          <span className={`font-medium truncate ${
+                            isSelected ? 'text-accent-gold' : 'text-white'
+                          }`}>
+                            {opening.name}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                          {opening.description}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                        {opening.description}
-                      </p>
+                      <ChevronRight 
+                        size={16} 
+                        className={`flex-shrink-0 transition-transform ${
+                          isSelected ? 'text-accent-gold rotate-90' : 'text-gray-600'
+                        }`}
+                      />
                     </div>
-                    <ChevronRight 
-                      size={16} 
-                      className={`flex-shrink-0 transition-transform ${
-                        isSelected ? 'text-accent-gold rotate-90' : 'text-gray-600'
-                      }`}
-                    />
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span 
-                      className={`badge ${
-                        opening.color === 'white' ? 'bg-white/10 text-white' : 'bg-black/30 text-gray-300'
-                      }`}
-                      title={`This opening is played as ${opening.color === 'white' ? 'White' : 'Black'}`}
-                    >
-                      Play as {opening.color === 'white' ? 'White' : 'Black'}
-                    </span>
-                  </div>
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+                    <div className="mt-2 flex items-center gap-2">
+                      <span 
+                        className={`badge ${
+                          opening.color === 'white' ? 'bg-white/10 text-white' : 'bg-black/30 text-gray-300'
+                        }`}
+                        title={`This opening is played as ${opening.color === 'white' ? 'White' : 'Black'}`}
+                      >
+                        Play as {opening.color === 'white' ? 'White' : 'Black'}
+                      </span>
+                    </div>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
       </div>
 
       {/* Footer */}
