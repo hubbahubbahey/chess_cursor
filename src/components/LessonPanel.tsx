@@ -11,7 +11,7 @@ export default function LessonPanel() {
   const explanation = currentPosition?.explanation
 
   return (
-    <div className="scrollable-panel max-h-[60vh] min-h-0">
+    <div className="scrollable-panel flex-1 min-h-0">
       <div className="p-4">
         {explanation ? (
           <div className="space-y-4 leading-relaxed">

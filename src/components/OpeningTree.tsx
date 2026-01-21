@@ -76,7 +76,7 @@ export default function OpeningTree() {
   }
 
   return (
-    <div className="scrollable-panel max-h-[60vh] min-h-0 p-4">
+    <div className="scrollable-panel flex-1 min-h-0 p-4">
         {/* Starting position row */}
         <button
           onClick={() => setCurrentPosition(startingPosition)}

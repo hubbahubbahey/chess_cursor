@@ -40,78 +40,97 @@ export function initEngine(): Promise<void> {
         } else if (message === 'readyok') {
           isReady = true
           resolve()
-        } else if (message.startsWith('bestmove')) {
-          // Parse the best move from the response
-          // Format: "bestmove e2e4" or "bestmove e7e8q" (with promotion)
-          console.log('Engine bestmove response:', message)
-          const parts = message.split(' ')
-          const move = parts[1]
-          if (currentResolve && move && move !== '(none)') {
-            if (moveTimeout) {
-              clearTimeout(moveTimeout)
-              moveTimeout = null
-            }
-            console.log('Engine parsed move:', move)
-            currentResolve(move)
-            currentResolve = null
-            currentReject = null
-          } else if (currentReject) {
-            if (moveTimeout) {
-              clearTimeout(moveTimeout)
-              moveTimeout = null
-            }
-            console.warn('Engine returned invalid move:', move)
-            currentReject(new Error('No valid move found'))
-            currentResolve = null
-            currentReject = null
-          }
         } else if (message.startsWith('info') && topMovesResolve) {
           // Parse multipv info lines: "info depth X multipv Y score cp X pv move1 move2 ..."
           const multipvMatch = message.match(/multipv (\d+)/)
           if (multipvMatch) {
             const multipvNum = parseInt(multipvMatch[1], 10)
-            const pvMatch = message.match(/pv\s+([a-h][1-8][a-h][1-8][qrnb]?)/)
+            // Extract the first move from the PV (principal variation)
+            // PV format: "pv d7d5 c2c4 e5d4" - we want just "d7d5"
+            const pvMatch = message.match(/pv\s+([a-h][1-8][a-h][1-8][qrnb]?)(?:\s|$)/)
             if (pvMatch) {
               const move = pvMatch[1]
               topMoves.set(multipvNum, move)
-              console.log(`Multipv ${multipvNum} move: ${move}`)
+              console.log(`Multipv ${multipvNum} move: ${move} (total collected: ${topMoves.size})`)
+            } else {
+              // Debug: log the message if PV doesn't match
+              console.warn('Multipv info line found but PV pattern did not match:', message.substring(0, 100))
             }
           }
-        } else if (message.startsWith('bestmove') && topMovesResolve) {
-          // When we get bestmove, we've collected all multipv moves
-          const movesArray: string[] = []
-          for (let i = 1; i <= expectedMultipv; i++) {
-            const move = topMoves.get(i)
-            if (move) {
-              movesArray.push(move)
+        } else if (message.startsWith('bestmove')) {
+          // Check if this is a multipv result
+          if (topMovesResolve && expectedMultipv > 0) {
+            // When we get bestmove, we've collected all multipv moves
+            console.log(`Multipv bestmove received, expectedMultipv: ${expectedMultipv}, topMoves size: ${topMoves.size}`)
+            const movesArray: string[] = []
+            for (let i = 1; i <= expectedMultipv; i++) {
+              const move = topMoves.get(i)
+              if (move) {
+                movesArray.push(move)
+              } else {
+                console.warn(`Multipv ${i} move not found in topMoves map`)
+              }
             }
-          }
-          
-          if (movesArray.length > 0) {
-            if (moveTimeout) {
-              clearTimeout(moveTimeout)
-              moveTimeout = null
+            
+            console.log(`Collected ${movesArray.length} moves from multipv (expected ${expectedMultipv}):`, movesArray)
+            
+            if (movesArray.length > 0) {
+              if (moveTimeout) {
+                clearTimeout(moveTimeout)
+                moveTimeout = null
+              }
+              console.log(`Successfully collected ${movesArray.length} top moves:`, movesArray)
+              // Reset multipv to 1 for future requests
+              engine.postMessage('setoption name multipv value 1')
+              const savedResolve = topMovesResolve
+              topMovesResolve = null
+              topMovesReject = null
+              topMoves.clear()
+              expectedMultipv = 0
+              savedResolve(movesArray)
+            } else if (topMovesReject) {
+              if (moveTimeout) {
+                clearTimeout(moveTimeout)
+                moveTimeout = null
+              }
+              console.warn('No moves collected from multipv, rejecting')
+              // Reset multipv to 1 for future requests
+              engine.postMessage('setoption name multipv value 1')
+              const savedReject = topMovesReject
+              topMovesResolve = null
+              topMovesReject = null
+              topMoves.clear()
+              expectedMultipv = 0
+              savedReject(new Error('No valid moves found from multipv'))
+            } else {
+              console.warn('Multipv bestmove received but topMovesResolve was cleared before processing')
             }
-            console.log(`Collected ${movesArray.length} top moves:`, movesArray)
-            // Reset multipv to 1 for future requests
-            engine.postMessage('setoption name multipv value 1')
-            topMovesResolve(movesArray)
-            topMovesResolve = null
-            topMovesReject = null
-            topMoves.clear()
-            expectedMultipv = 0
-          } else if (topMovesReject) {
-            if (moveTimeout) {
-              clearTimeout(moveTimeout)
-              moveTimeout = null
+          } else {
+            // Regular bestmove handler (for single-move requests)
+            // Parse the best move from the response
+            // Format: "bestmove e2e4" or "bestmove e7e8q" (with promotion)
+            console.log('Engine bestmove response:', message, 'topMovesResolve:', !!topMovesResolve, 'currentResolve:', !!currentResolve)
+            const parts = message.split(' ')
+            const move = parts[1]
+            if (currentResolve && move && move !== '(none)') {
+              if (moveTimeout) {
+                clearTimeout(moveTimeout)
+                moveTimeout = null
+              }
+              console.log('Engine parsed move:', move)
+              currentResolve(move)
+              currentResolve = null
+              currentReject = null
+            } else if (currentReject) {
+              if (moveTimeout) {
+                clearTimeout(moveTimeout)
+                moveTimeout = null
+              }
+              console.warn('Engine returned invalid move:', move)
+              currentReject(new Error('No valid move found'))
+              currentResolve = null
+              currentReject = null
             }
-            // Reset multipv to 1 for future requests
-            engine.postMessage('setoption name multipv value 1')
-            topMovesReject(new Error('No valid moves found from multipv'))
-            topMovesResolve = null
-            topMovesReject = null
-            topMoves.clear()
-            expectedMultipv = 0
           }
         } else if (message.startsWith('error')) {
           // Handle engine errors

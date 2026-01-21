@@ -35,7 +35,7 @@ export default function CoachChatPanel() {
   }
 
   return (
-    <div className="flex-1 bg-surface-800 rounded-xl overflow-hidden flex flex-col h-full min-h-0">
+    <div className="flex-1 bg-surface-800 rounded-xl overflow-hidden flex flex-col min-h-0">
       {/* Messages area */}
       <div className="flex-1 scrollable-panel p-4 space-y-4 min-h-0">
         {coachMessages.length === 0 ? (

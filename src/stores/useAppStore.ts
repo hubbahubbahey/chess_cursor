@@ -402,7 +402,15 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
         } catch (error) {
           // Fallback to best move if multipv fails
-          console.warn('Multipv failed, falling back to best move:', error)
+          // Check if this was an intentional cancellation (e.g., user reset/go back)
+          const errorMessage = error instanceof Error ? error.message : String(error)
+          if (errorMessage === 'Calculation stopped') {
+            // Intentional cancellation - don't log as warning, just fall back silently
+            console.log('Multipv calculation was cancelled, falling back to best move')
+          } else {
+            // Actual error - log as warning
+            console.warn('Multipv failed, falling back to best move:', error)
+          }
           bestMove = await getBestMove(currentFen, depth)
         }
       } else {
