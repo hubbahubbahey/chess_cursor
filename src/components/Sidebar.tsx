@@ -1,9 +1,9 @@
 import { useAppStore, ViewType } from '../stores/useAppStore'
-import { 
-  BookOpen, 
-  GraduationCap, 
-  HelpCircle, 
-  BarChart3, 
+import {
+  BookOpen,
+  GraduationCap,
+  HelpCircle,
+  BarChart3,
   ChevronRight,
   ChevronLeft,
   Crown
@@ -13,15 +13,15 @@ const navItems: { id: ViewType; label: string; icon: typeof BookOpen }[] = [
   { id: 'explore', label: 'Explore', icon: BookOpen },
   { id: 'train', label: 'Train', icon: GraduationCap },
   { id: 'quiz', label: 'Quiz', icon: HelpCircle },
-  { id: 'stats', label: 'Statistics', icon: BarChart3 },
+  { id: 'stats', label: 'Statistics', icon: BarChart3 }
 ]
 
 export default function Sidebar() {
-  const { 
-    currentView, 
-    setCurrentView, 
-    openings, 
-    currentOpening, 
+  const {
+    currentView,
+    setCurrentView,
+    openings,
+    currentOpening,
     selectOpening,
     sidebarCollapsed,
     toggleSidebar
@@ -132,13 +132,17 @@ export default function Sidebar() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <Crown 
-                            size={14} 
-                            className={opening.color === 'white' ? 'text-gray-300' : 'text-gray-600'} 
+                          <Crown
+                            size={14}
+                            className={
+                              opening.color === 'white' ? 'text-gray-300' : 'text-gray-600'
+                            }
                           />
-                          <span className={`font-medium truncate ${
-                            isSelected ? 'text-accent-gold' : 'text-white'
-                          }`}>
+                          <span
+                            className={`font-medium truncate ${
+                              isSelected ? 'text-accent-gold' : 'text-white'
+                            }`}
+                          >
                             {opening.name}
                           </span>
                         </div>
@@ -146,17 +150,19 @@ export default function Sidebar() {
                           {opening.description}
                         </p>
                       </div>
-                      <ChevronRight 
-                        size={16} 
+                      <ChevronRight
+                        size={16}
                         className={`flex-shrink-0 transition-transform ${
                           isSelected ? 'text-accent-gold rotate-90' : 'text-gray-600'
                         }`}
                       />
                     </div>
                     <div className="mt-2 flex items-center gap-2">
-                      <span 
+                      <span
                         className={`badge ${
-                          opening.color === 'white' ? 'bg-white/10 text-white' : 'bg-black/30 text-gray-300'
+                          opening.color === 'white'
+                            ? 'bg-white/10 text-white'
+                            : 'bg-black/30 text-gray-300'
                         }`}
                         title={`You play as ${opening.color === 'white' ? 'White' : 'Black'} in this opening`}
                       >
@@ -174,9 +180,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="p-3 border-t border-surface-700">
         <div className="text-center">
-          <p className="text-xs text-gray-600">
-            Chess Opening Trainer v1.0
-          </p>
+          <p className="text-xs text-gray-600">Chess Opening Trainer v1.0</p>
         </div>
       </div>
     </aside>

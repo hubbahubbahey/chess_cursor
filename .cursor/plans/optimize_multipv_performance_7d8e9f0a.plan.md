@@ -23,18 +23,21 @@ Using multipv to get top N moves takes ~75% longer than getting just the best mo
 ## Solution Options
 
 ### Option 1: Reduce Depth for Multipv (Recommended)
+
 When using variety > 1, reduce the search depth by 1-2 levels. This compensates for the extra work multipv requires while still getting strong moves.
 
 **Pros**: Simple, maintains quality, predictable timing
 **Cons**: Slightly weaker moves (but still very strong)
 
 ### Option 2: Use Time-Based Search
+
 Use `go movetime <ms>` instead of `go depth <n>` for multipv. Set a reasonable time limit (e.g., 2-3 seconds) that's similar to what depth-based search takes.
 
 **Pros**: More consistent timing, can be faster
 **Cons**: Less predictable move quality, need to tune time values
 
 ### Option 3: Hybrid Approach
+
 Get the best move quickly first, then get top moves with reduced depth/time. This ensures we always have a move ready.
 
 **Pros**: Fastest perceived response
@@ -53,6 +56,7 @@ Use **Option 1** (reduce depth) as it's the simplest and most effective:
 ### `src/stores/useAppStore.ts`
 
 **In `triggerAiMove` function** (around line 381-387):
+
 - When calling `getTopMoves`, reduce depth by 1-2
 - Example: `const multipvDepth = Math.max(1, depth - 2)`
 - Use `multipvDepth` for multipv, keep original `depth` for fallback
@@ -60,6 +64,7 @@ Use **Option 1** (reduce depth) as it's the simplest and most effective:
 ### `src/lib/engine.ts` (Optional)
 
 If we want to add time-based search option:
+
 - Add `getTopMovesWithTime(fen: string, movetime: number, count: number)` function
 - Use `go movetime <ms>` instead of `go depth <n>`
 

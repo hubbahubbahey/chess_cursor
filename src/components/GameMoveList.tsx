@@ -9,14 +9,7 @@ interface MovePair {
 }
 
 export default function GameMoveList() {
-  const { 
-    moveHistory, 
-    game,
-    aiColor,
-    aiThinking,
-    resetGame,
-    goBack
-  } = useAppStore()
+  const { moveHistory, game, aiColor, aiThinking, resetGame, goBack } = useAppStore()
 
   // Group moves into pairs for two-column display
   const movePairs = useMemo(() => {
@@ -44,7 +37,7 @@ export default function GameMoveList() {
   const getGameResult = () => {
     if (isCheckmate) {
       const winner = currentTurn === 'white' ? 'Black' : 'White'
-      const isPlayerWin = (winner.toLowerCase() === playerColor)
+      const isPlayerWin = winner.toLowerCase() === playerColor
       return {
         text: `Checkmate! ${winner} wins`,
         isWin: isPlayerWin,
@@ -85,21 +78,25 @@ export default function GameMoveList() {
             </button>
           </div>
         </div>
-        
+
         {/* Turn indicator */}
         {!isGameOver && (
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${
-              currentTurn === 'white' ? 'bg-white' : 'bg-gray-800 border border-gray-600'
-            }`} />
+            <div
+              className={`w-3 h-3 rounded-full ${
+                currentTurn === 'white' ? 'bg-white' : 'bg-gray-800 border border-gray-600'
+              }`}
+            />
             <span className="text-sm text-gray-400">
-              {currentTurn === playerColor ? 'Your turn' : (
-                aiThinking ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin" />
-                    AI is thinking...
-                  </span>
-                ) : 'AI\'s turn'
+              {currentTurn === playerColor ? (
+                'Your turn'
+              ) : aiThinking ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 size={14} className="animate-spin" />
+                  AI is thinking...
+                </span>
+              ) : (
+                "AI's turn"
               )}
             </span>
             {isCheck && (
@@ -113,27 +110,34 @@ export default function GameMoveList() {
 
       {/* Game result banner */}
       {gameResult && (
-        <div className={`px-4 py-3 flex items-center gap-3 ${
-          gameResult.isWin === true 
-            ? 'bg-green-500/20 border-b border-green-500/30' 
-            : gameResult.isWin === false 
-              ? 'bg-red-500/20 border-b border-red-500/30'
-              : 'bg-blue-500/20 border-b border-blue-500/30'
-        }`}>
-          <gameResult.icon size={20} className={
-            gameResult.isWin === true 
-              ? 'text-green-400' 
-              : gameResult.isWin === false 
-                ? 'text-red-400'
-                : 'text-blue-400'
-          } />
-          <span className={`font-medium ${
-            gameResult.isWin === true 
-              ? 'text-green-400' 
-              : gameResult.isWin === false 
-                ? 'text-red-400'
-                : 'text-blue-400'
-          }`}>
+        <div
+          className={`px-4 py-3 flex items-center gap-3 ${
+            gameResult.isWin === true
+              ? 'bg-green-500/20 border-b border-green-500/30'
+              : gameResult.isWin === false
+                ? 'bg-red-500/20 border-b border-red-500/30'
+                : 'bg-blue-500/20 border-b border-blue-500/30'
+          }`}
+        >
+          <gameResult.icon
+            size={20}
+            className={
+              gameResult.isWin === true
+                ? 'text-green-400'
+                : gameResult.isWin === false
+                  ? 'text-red-400'
+                  : 'text-blue-400'
+            }
+          />
+          <span
+            className={`font-medium ${
+              gameResult.isWin === true
+                ? 'text-green-400'
+                : gameResult.isWin === false
+                  ? 'text-red-400'
+                  : 'text-blue-400'
+            }`}
+          >
             {gameResult.text}
           </span>
         </div>
@@ -158,9 +162,9 @@ export default function GameMoveList() {
 
             {/* Move rows */}
             {movePairs.map((pair, index) => (
-              <MoveRow 
-                key={pair.moveNumber} 
-                pair={pair} 
+              <MoveRow
+                key={pair.moveNumber}
+                pair={pair}
                 isLatest={index === movePairs.length - 1}
               />
             ))}
@@ -188,15 +192,15 @@ function MoveRow({ pair, isLatest }: MoveRowProps) {
   return (
     <>
       {/* Move number */}
-      <div className="text-xs text-gray-500 px-2 py-1.5 flex items-center">
-        {pair.moveNumber}.
-      </div>
+      <div className="text-xs text-gray-500 px-2 py-1.5 flex items-center">{pair.moveNumber}.</div>
 
       {/* White's move */}
       {pair.white ? (
-        <div className={`px-2 py-1.5 rounded font-mono text-sm ${
-          isLatest && !pair.black ? 'bg-accent-gold/20 text-accent-gold' : 'text-white'
-        }`}>
+        <div
+          className={`px-2 py-1.5 rounded font-mono text-sm ${
+            isLatest && !pair.black ? 'bg-accent-gold/20 text-accent-gold' : 'text-white'
+          }`}
+        >
           {pair.white}
         </div>
       ) : (
@@ -205,9 +209,11 @@ function MoveRow({ pair, isLatest }: MoveRowProps) {
 
       {/* Black's move */}
       {pair.black ? (
-        <div className={`px-2 py-1.5 rounded font-mono text-sm ${
-          isLatest ? 'bg-accent-gold/20 text-accent-gold' : 'text-white'
-        }`}>
+        <div
+          className={`px-2 py-1.5 rounded font-mono text-sm ${
+            isLatest ? 'bg-accent-gold/20 text-accent-gold' : 'text-white'
+          }`}
+        >
           {pair.black}
         </div>
       ) : (

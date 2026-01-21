@@ -8,7 +8,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -54,7 +56,9 @@ body {
   background: linear-gradient(145deg, #252220 0%, #1a1714 100%);
   border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   z-index: 10;
   isolation: isolate;
@@ -68,7 +72,18 @@ body {
   width: 20px;
   height: 20px;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(212, 165, 74, 0.3) 40%, rgba(212, 165, 74, 0.3) 45%, transparent 45%, transparent 60%, rgba(212, 165, 74, 0.3) 60%, rgba(212, 165, 74, 0.3) 65%, transparent 65%);
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(212, 165, 74, 0.3) 40%,
+    rgba(212, 165, 74, 0.3) 45%,
+    transparent 45%,
+    transparent 60%,
+    rgba(212, 165, 74, 0.3) 60%,
+    rgba(212, 165, 74, 0.3) 65%,
+    transparent 65%
+  );
   border-bottom-right-radius: 12px;
   transition: background 0.2s ease;
   z-index: 20;
@@ -76,7 +91,18 @@ body {
 }
 
 .resize-handle:hover {
-  background: linear-gradient(135deg, transparent 0%, transparent 40%, rgba(212, 165, 74, 0.6) 40%, rgba(212, 165, 74, 0.6) 45%, transparent 45%, transparent 60%, rgba(212, 165, 74, 0.6) 60%, rgba(212, 165, 74, 0.6) 65%, transparent 65%);
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(212, 165, 74, 0.6) 40%,
+    rgba(212, 165, 74, 0.6) 45%,
+    transparent 45%,
+    transparent 60%,
+    rgba(212, 165, 74, 0.6) 60%,
+    rgba(212, 165, 74, 0.6) 65%,
+    transparent 65%
+  );
 }
 
 /* Piece highlighting */
@@ -93,15 +119,30 @@ body {
 }
 
 @keyframes correctPulse {
-  0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-  70% { box-shadow: 0 0 0 20px rgba(74, 222, 128, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(74, 222, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+  }
 }
 
 @keyframes incorrectShake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20%,
+  60% {
+    transform: translateX(-5px);
+  }
+  40%,
+  80% {
+    transform: translateX(5px);
+  }
 }
 
 /* Card animations */
@@ -110,8 +151,14 @@ body {
 }
 
 @keyframes cardEnter {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Tree node styling */

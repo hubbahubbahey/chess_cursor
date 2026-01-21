@@ -58,10 +58,7 @@ The chess board is being overlapped by the right accordion panel (AI Opponent, Y
 ```typescript
 const maxSize = useMemo(() => {
   if (typeof window === 'undefined') return MAX_BOARD_SIZE
-  return Math.min(
-    MAX_BOARD_SIZE,
-    Math.min(window.innerWidth * 0.4, window.innerHeight * 0.6)
-  )
+  return Math.min(MAX_BOARD_SIZE, Math.min(window.innerWidth * 0.4, window.innerHeight * 0.6))
 }, [])
 ```
 

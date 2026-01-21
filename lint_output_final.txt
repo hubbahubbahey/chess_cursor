@@ -1,0 +1,202 @@
+
+> chess-opening-trainer@1.0.0 lint
+> eslint . --report-unused-disable-directives --max-warnings 0
+
+(node:55532) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/coldk/cursor_chess/eslint.config.js?mtime=1768990333149 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\coldk\cursor_chess\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+C:\Users\coldk\cursor_chess\src\App.tsx
+  67:5  error  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx
+   87:45  error    Error: Cannot access variable before it is declared
+
+`handleResizeEnd` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:87:45
+  85 |     isResizing.current = false
+  86 |     document.removeEventListener('mousemove', handleResizeMove)
+> 87 |     document.removeEventListener('mouseup', handleResizeEnd)
+     |                                             ^^^^^^^^^^^^^^^ `handleResizeEnd` accessed before it is declared
+  88 |   }, [handleResizeMove])
+  89 |
+  90 |   const handleResizeStart = useCallback((e: React.MouseEvent) => {
+
+C:\Users\coldk\cursor_chess\src\components\ChessBoard.tsx:84:3
+  82 |   }, [])
+  83 |
+> 84 |   const handleResizeEnd = useCallback(() => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 85 |     isResizing.current = false
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 86 |     document.removeEventListener('mousemove', handleResizeMove)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 87 |     document.removeEventListener('mouseup', handleResizeEnd)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 88 |   }, [handleResizeMove])
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^ `handleResizeEnd` is declared here
+  89 |
+  90 |   const handleResizeStart = useCallback((e: React.MouseEvent) => {
+  91 |     e.preventDefault()  react-hooks/immutability
+  124:6   warning  React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/exhaustive-deps
+
+C:\Users\coldk\cursor_chess\src\components\CoachChatPanel.tsx
+   15:5   error  'fen' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+   16:5   error  'setCoachHighlightSquares' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  111:91  error  Unnecessary escape character: \#                               no-useless-escape
+
+C:\Users\coldk\cursor_chess\src\components\LessonPanel.tsx
+  2:10  error  'MessageCircle' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx
+  111:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx:111:7
+  109 |   useEffect(() => {
+  110 |     if (currentOpening && quizPositions.length > 0) {
+> 111 |       pickRandomQuestion()
+      |       ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  112 |     }
+  113 |   }, [currentOpening, quizPositions.length])
+  114 |                                                                                                                                                                                                                                                                                                                                                                                                                                react-hooks/set-state-in-effect
+  113:6  warning  React Hook useEffect has a missing dependency: 'pickRandomQuestion'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  117:5  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `handleMoveAttempt`, but the source dependencies were [state, fen, selectedSquare, legalMoves]. Inferred different dependency than source.
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx:117:5
+  115 |   // Handle square click
+  116 |   const onSquareClick = useCallback(
+> 117 |     (square: Square) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^
+> 118 |       if (state !== 'question') return
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 119 |
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |       }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |     },
+      | ^^^^^^ Could not preserve existing manual memoization
+  145 |     [state, fen, selectedSquare, legalMoves]
+  146 |   )
+  147 |                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/preserve-manual-memoization
+  145:5  warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+  150:5  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `handleMoveAttempt`, but the source dependencies were [state, fen]. Inferred different dependency than source.
+
+C:\Users\coldk\cursor_chess\src\components\QuizMode.tsx:150:5
+  148 |   // Handle piece drop
+  149 |   const onPieceDrop = useCallback(
+> 150 |     (source: Square, target: Square) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 151 |       if (state !== 'question') return false
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 152 |       const san = moveToSAN(fen, source, target)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 153 |       if (san) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 154 |         handleMoveAttempt(san)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 155 |         return true
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 156 |       }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 157 |       return false
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 158 |     },
+      | ^^^^^^ Could not preserve existing manual memoization
+  159 |     [state, fen]
+  160 |   )
+  161 |  react-hooks/preserve-manual-memoization
+  159:5  warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      react-hooks/exhaustive-deps
+
+C:\Users\coldk\cursor_chess\src\components\StatsPanel.tsx
+   4:65  error  'XCircle' is defined but never used                    @typescript-eslint/no-unused-vars
+  14:10  error  'reviews' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx
+   72:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:72:7
+  70 |       // Load the parent position (we want to show the position BEFORE the move)
+  71 |       const parentFen = getParentFen(review.fen, review.move_san)
+> 72 |       setFen(parentFen || review.fen)
+     |       ^^^^^^ Avoid calling setState() directly within an effect
+  73 |       setCorrectMove(review.move_san || '')
+  74 |       setState('question')
+  75 |       setUserMove('')                                                                                                                                                                                                                                                                                                                      react-hooks/set-state-in-effect
+   81:6  warning  React Hook useEffect has a missing dependency: 'getParentFen'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/exhaustive-deps
+  107:5  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `handleMoveAttempt`, but the source dependencies were [state, fen, selectedSquare, legalMoves]. Inferred different dependency than source.
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:107:5
+  105 |   // Handle square click
+  106 |   const onSquareClick = useCallback(
+> 107 |     (square: Square) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^
+> 108 |       if (state !== 'question') return
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 109 |
+      ΓÇª
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 134 |       }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 135 |     },
+      | ^^^^^^ Could not preserve existing manual memoization
+  136 |     [state, fen, selectedSquare, legalMoves]
+  137 |   )
+  138 |                                                                                                                                                                                                                                                                                                                                                                                  react-hooks/preserve-manual-memoization
+  136:5  warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+  141:5  error    Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. The inferred dependencies did not match the manually specified dependencies, which could cause the value to change more or less frequently than expected. The inferred dependency was `handleMoveAttempt`, but the source dependencies were [state, fen]. Inferred different dependency than source.
+
+C:\Users\coldk\cursor_chess\src\components\TrainingMode.tsx:141:5
+  139 |   // Handle piece drop
+  140 |   const onPieceDrop = useCallback(
+> 141 |     (source: Square, target: Square) => {
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 142 |       if (state !== 'question') return false
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 143 |       const san = moveToSAN(fen, source, target)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 144 |       if (san) {
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 145 |         handleMoveAttempt(san)
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 146 |         return true
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 147 |       }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 148 |       return false
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 149 |     },
+      | ^^^^^^ Could not preserve existing manual memoization
+  150 |     [state, fen]
+  151 |   )
+  152 |  react-hooks/preserve-manual-memoization
+  150:5  warning  React Hook useCallback has a missing dependency: 'handleMoveAttempt'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          react-hooks/exhaustive-deps
+
+C:\Users\coldk\cursor_chess\src\lib\chess.ts
+  171:91  error  Unnecessary escape character: \#  no-useless-escape
+
+Γ£û 22 problems (15 errors, 7 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+

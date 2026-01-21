@@ -31,21 +31,18 @@ isProject: false
 ## Current Issues Identified
 
 1. **Layout Cramping:**
-
    - Fixed panel widths (w-64 sidebar, w-80 right panels) don't adapt to window size
    - Multiple stacked panels compete for vertical space
    - Board container width calculation may cause overflow
    - Training/Quiz modes use fixed 480px board size
 
 2. **Spacing Problems:**
-
    - Insufficient min-heights and max-heights on scrollable containers
    - CoachChatPanel can grow unbounded with long markdown content
    - LessonPanel explanations can overflow
    - GameMoveList and OpeningTree need better scroll constraints
 
 3. **Visual Clutter:**
-
    - Right panel has multiple sections always visible (AI Control, Game Moves/Lesson/Tree)
    - No clear visual hierarchy between sections
    - Panels lack proper spacing and breathing room
@@ -154,7 +151,6 @@ interface AccordionProps {
 
 1. Sidebar (fixed 256px, min-width)
 2. Main content area (flex-1, min-width: 0)
-
    - Board section (centered, responsive)
    - CoachChatPanel (max-height constrained)
    - Right panel (flex-1, accordion sections)

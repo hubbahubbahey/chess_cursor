@@ -2,33 +2,21 @@ import { useEffect, useState, useCallback, useMemo } from 'react'
 import { Chessboard } from 'react-chessboard'
 import { Chess, Square } from 'chess.js'
 import { useAppStore } from '../stores/useAppStore'
-import { 
-  calculateNextReview, 
-  difficultyToQuality, 
+import {
+  calculateNextReview,
+  difficultyToQuality,
   formatInterval,
   getProjectedIntervals,
   getMasteryLevel
 } from '../lib/srs'
 import { getLegalMovesFromSquare, moveToSAN } from '../lib/chess'
-import { 
-  Brain, 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Flame,
-  RotateCcw
-} from 'lucide-react'
+import { Brain, CheckCircle2, XCircle, Clock, Flame, RotateCcw } from 'lucide-react'
 
 type TrainingState = 'loading' | 'question' | 'correct' | 'incorrect' | 'complete'
 
 export default function TrainingMode() {
-  const { 
-    currentOpening, 
-    dueReviews, 
-    currentReviewIndex,
-    loadDueReviews,
-    nextReview
-  } = useAppStore()
+  const { currentOpening, dueReviews, currentReviewIndex, loadDueReviews, nextReview } =
+    useAppStore()
 
   const [state, setState] = useState<TrainingState>('loading')
   const [fen, setFen] = useState('')
@@ -39,6 +27,32 @@ export default function TrainingMode() {
   const [streak, setStreak] = useState(0)
   const [sessionCorrect, setSessionCorrect] = useState(0)
   const [sessionTotal, setSessionTotal] = useState(0)
+
+  // Calculate responsive board size
+  const boardSize = useMemo(() => {
+    if (typeof window === 'undefined') return 480
+    // Access window safely
+    const width = window.innerWidth
+    const height = window.innerHeight
+    const availableWidth = width - 256 - 320 - 96 // sidebar + coach panel + padding
+    const availableHeight = height - 32 - 48 // title bar + padding
+    return Math.min(480, Math.min(availableWidth * 0.4, availableHeight * 0.6))
+  }, [])
+
+  // Get the FEN before a move was made
+  const getParentFen = useCallback((fen: string, moveSan: string | null): string | null => {
+    if (!moveSan) return null
+    // For training, we want to show the position where the user needs to find the move
+    // The review.fen is the position AFTER the move, so we need to reverse it
+    // This is a simplified approach - in a real app you'd store parent FEN
+    const game = new Chess(fen)
+    try {
+      game.undo()
+      return game.fen()
+    } catch {
+      return null
+    }
+  }, [])
 
   const currentReview = dueReviews[currentReviewIndex]
 
@@ -55,6 +69,7 @@ export default function TrainingMode() {
       const review = dueReviews[currentReviewIndex]
       // Load the parent position (we want to show the position BEFORE the move)
       const parentFen = getParentFen(review.fen, review.move_san)
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFen(parentFen || review.fen)
       setCorrectMove(review.move_san || '')
       setState('question')
@@ -64,74 +79,17 @@ export default function TrainingMode() {
     } else if (dueReviews.length === 0) {
       setState('complete')
     }
-  }, [dueReviews, currentReviewIndex])
-
-  // Get the FEN before a move was made
-  function getParentFen(fen: string, moveSan: string | null): string | null {
-    if (!moveSan) return null
-    // For training, we want to show the position where the user needs to find the move
-    // The review.fen is the position AFTER the move, so we need to reverse it
-    // This is a simplified approach - in a real app you'd store parent FEN
-    const game = new Chess(fen)
-    try {
-      game.undo()
-      return game.fen()
-    } catch {
-      return null
-    }
-  }
-
-  // Handle square click
-  const onSquareClick = useCallback((square: Square) => {
-    if (state !== 'question') return
-
-    if (selectedSquare === square) {
-      setSelectedSquare(null)
-      setLegalMoves([])
-      return
-    }
-
-    if (legalMoves.includes(square)) {
-      // Make the move
-      const san = moveToSAN(fen, selectedSquare!, square)
-      if (san) {
-        handleMoveAttempt(san)
-      }
-      setSelectedSquare(null)
-      setLegalMoves([])
-      return
-    }
-
-    const moves = getLegalMovesFromSquare(fen, square)
-    if (moves.length > 0) {
-      setSelectedSquare(square)
-      setLegalMoves(moves.map(m => m.to))
-    } else {
-      setSelectedSquare(null)
-      setLegalMoves([])
-    }
-  }, [state, fen, selectedSquare, legalMoves])
-
-  // Handle piece drop
-  const onPieceDrop = useCallback((source: Square, target: Square) => {
-    if (state !== 'question') return false
-    const san = moveToSAN(fen, source, target)
-    if (san) {
-      handleMoveAttempt(san)
-      return true
-    }
-    return false
-  }, [state, fen])
+  }, [dueReviews, currentReviewIndex, getParentFen])
 
   // Check if the user's move is correct
-  const handleMoveAttempt = (moveSan: string) => {
+  const handleMoveAttempt = useCallback((moveSan: string) => {
     setUserMove(moveSan)
-    setSessionTotal(prev => prev + 1)
-    
+    setSessionTotal((prev) => prev + 1)
+
     if (moveSan === correctMove) {
       setState('correct')
-      setStreak(prev => prev + 1)
-      setSessionCorrect(prev => prev + 1)
+      setStreak((prev) => prev + 1)
+      setSessionCorrect((prev) => prev + 1)
       // Update the board to show the correct move
       const game = new Chess(fen)
       game.move(moveSan)
@@ -140,7 +98,57 @@ export default function TrainingMode() {
       setState('incorrect')
       setStreak(0)
     }
-  }
+  }, [correctMove, fen]) // Removed attempts as it wasn't used here, added correctMove and fen
+
+  // Handle square click
+  const onSquareClick = useCallback(
+    (square: Square) => {
+      if (state !== 'question') return
+
+      if (selectedSquare === square) {
+        setSelectedSquare(null)
+        setLegalMoves([])
+        return
+      }
+
+      if (legalMoves.includes(square)) {
+        // Make the move
+        const san = moveToSAN(fen, selectedSquare!, square)
+        if (san) {
+          handleMoveAttempt(san)
+        }
+        setSelectedSquare(null)
+        setLegalMoves([])
+        return
+      }
+
+      const moves = getLegalMovesFromSquare(fen, square)
+      if (moves.length > 0) {
+        setSelectedSquare(square)
+        setLegalMoves(moves.map((m) => m.to))
+      } else {
+        setSelectedSquare(null)
+        setLegalMoves([])
+      }
+    },
+    [state, fen, selectedSquare, legalMoves, handleMoveAttempt]
+  )
+
+  // Handle piece drop
+  const onPieceDrop = useCallback(
+    (source: Square, target: Square) => {
+      if (state !== 'question') return false
+      const san = moveToSAN(fen, source, target)
+      if (san) {
+        handleMoveAttempt(san)
+        return true
+      }
+      return false
+    },
+    [state, fen, handleMoveAttempt]
+  )
+
+
 
   // Handle difficulty rating and move to next card
   const handleRating = async (difficulty: 'again' | 'hard' | 'good' | 'easy') => {
@@ -163,10 +171,7 @@ export default function TrainingMode() {
     )
 
     // Update stats
-    await window.electronAPI.updateStats(
-      currentReview.position_id,
-      state === 'correct'
-    )
+    await window.electronAPI.updateStats(currentReview.position_id, state === 'correct')
 
     // Move to next review
     if (currentReviewIndex < dueReviews.length - 1) {
@@ -190,17 +195,19 @@ export default function TrainingMode() {
   }
 
   // Get projected intervals for the rating buttons
-  const projectedIntervals = currentReview ? getProjectedIntervals({
-    easeFactor: currentReview.ease_factor,
-    interval: currentReview.interval,
-    repetitions: currentReview.repetitions
-  }) : { again: 1, hard: 1, good: 1, easy: 1 }
+  const projectedIntervals = currentReview
+    ? getProjectedIntervals({
+      easeFactor: currentReview.ease_factor,
+      interval: currentReview.interval,
+      repetitions: currentReview.repetitions
+    })
+    : { again: 1, hard: 1, good: 1, easy: 1 }
 
   // Custom square styles
   const customSquareStyles: Record<string, React.CSSProperties> = {}
-  legalMoves.forEach(square => {
+  legalMoves.forEach((square) => {
     customSquareStyles[square] = {
-      background: 'radial-gradient(circle, rgba(212, 165, 74, 0.4) 25%, transparent 25%)',
+      background: 'radial-gradient(circle, rgba(212, 165, 74, 0.4) 25%, transparent 25%)'
     }
   })
   if (selectedSquare) {
@@ -274,18 +281,12 @@ export default function TrainingMode() {
     )
   }
 
-  const mastery = currentReview ? getMasteryLevel(
-    currentReview.repetitions,
-    currentReview.ease_factor
-  ) : null
+  const mastery = currentReview
+    ? getMasteryLevel(currentReview.repetitions, currentReview.ease_factor)
+    : null
 
   // Calculate responsive board size
-  const boardSize = useMemo(() => {
-    if (typeof window === 'undefined') return 480
-    const availableWidth = window.innerWidth - 256 - 320 - 96 // sidebar + coach panel + padding
-    const availableHeight = window.innerHeight - 32 - 48 // title bar + padding
-    return Math.min(480, Math.min(availableWidth * 0.4, availableHeight * 0.6))
-  }, [])
+
 
   return (
     <div className="flex-1 flex gap-4 p-4 overflow-hidden">
@@ -326,7 +327,9 @@ export default function TrainingMode() {
             <span className="text-sm text-white">{streak} streak</span>
           </div>
           {mastery && (
-            <span className={`badge badge-${mastery.color === 'green' ? 'emerald' : mastery.color === 'yellow' ? 'gold' : 'ruby'}`}>
+            <span
+              className={`badge badge-${mastery.color === 'green' ? 'emerald' : mastery.color === 'yellow' ? 'gold' : 'ruby'}`}
+            >
               {mastery.label}
             </span>
           )}
@@ -340,11 +343,9 @@ export default function TrainingMode() {
               {state === 'correct' && 'Correct!'}
               {state === 'incorrect' && 'Not quite'}
             </h3>
-            
+
             {state === 'question' && (
-              <p className="text-gray-400 mb-4">
-                What is the correct move in this position?
-              </p>
+              <p className="text-gray-400 mb-4">What is the correct move in this position?</p>
             )}
 
             {(state === 'correct' || state === 'incorrect') && (
@@ -357,7 +358,8 @@ export default function TrainingMode() {
                   )}
                   <div>
                     <p className="text-white">
-                      Correct move: <span className="font-mono text-accent-gold font-bold">{correctMove}</span>
+                      Correct move:{' '}
+                      <span className="font-mono text-accent-gold font-bold">{correctMove}</span>
                     </p>
                     {state === 'incorrect' && userMove && (
                       <p className="text-gray-500 text-sm">
@@ -369,9 +371,7 @@ export default function TrainingMode() {
 
                 {currentReview?.explanation && (
                   <div className="bg-surface-700 rounded-lg p-4">
-                    <p className="text-gray-300 leading-relaxed">
-                      {currentReview.explanation}
-                    </p>
+                    <p className="text-gray-300 leading-relaxed">{currentReview.explanation.coach}</p>
                   </div>
                 )}
               </div>
@@ -381,47 +381,50 @@ export default function TrainingMode() {
           {/* Action buttons */}
           <div className="mt-6">
             {state === 'question' && (
-              <button
-                onClick={handleShowAnswer}
-                className="btn-secondary w-full"
-              >
+              <button onClick={handleShowAnswer} className="btn-secondary w-full">
                 Show Answer
               </button>
             )}
 
             {(state === 'correct' || state === 'incorrect') && (
               <div className="space-y-3">
-                <p className="text-sm text-gray-500 text-center">
-                  How difficult was this?
-                </p>
+                <p className="text-sm text-gray-500 text-center">How difficult was this?</p>
                 <div className="grid grid-cols-4 gap-2">
                   <button
                     onClick={() => handleRating('again')}
                     className="flex flex-col items-center gap-1 p-3 bg-red-900/30 hover:bg-red-900/50 rounded-lg transition-colors"
                   >
                     <span className="text-red-400 font-medium">Again</span>
-                    <span className="text-xs text-gray-500">{formatInterval(projectedIntervals.again)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatInterval(projectedIntervals.again)}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleRating('hard')}
                     className="flex flex-col items-center gap-1 p-3 bg-orange-900/30 hover:bg-orange-900/50 rounded-lg transition-colors"
                   >
                     <span className="text-orange-400 font-medium">Hard</span>
-                    <span className="text-xs text-gray-500">{formatInterval(projectedIntervals.hard)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatInterval(projectedIntervals.hard)}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleRating('good')}
                     className="flex flex-col items-center gap-1 p-3 bg-green-900/30 hover:bg-green-900/50 rounded-lg transition-colors"
                   >
                     <span className="text-green-400 font-medium">Good</span>
-                    <span className="text-xs text-gray-500">{formatInterval(projectedIntervals.good)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatInterval(projectedIntervals.good)}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleRating('easy')}
                     className="flex flex-col items-center gap-1 p-3 bg-blue-900/30 hover:bg-blue-900/50 rounded-lg transition-colors"
                   >
                     <span className="text-blue-400 font-medium">Easy</span>
-                    <span className="text-xs text-gray-500">{formatInterval(projectedIntervals.easy)}</span>
+                    <span className="text-xs text-gray-500">
+                      {formatInterval(projectedIntervals.easy)}
+                    </span>
                   </button>
                 </div>
               </div>

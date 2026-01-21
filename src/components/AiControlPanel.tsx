@@ -31,7 +31,7 @@ export default function AiControlPanel() {
           <Bot size={20} className={aiEnabled ? 'text-accent-gold' : 'text-gray-500'} />
           <span className="font-display text-white">AI Opponent</span>
         </div>
-        
+
         {/* Toggle switch */}
         <button
           onClick={() => {
@@ -123,7 +123,9 @@ export default function AiControlPanel() {
           <div>
             <label className="block text-sm text-gray-400 mb-2">
               Move Variety
-              <span className="ml-2 text-xs text-gray-500">({aiVariety === 1 ? 'Best only' : `Top ${aiVariety}`})</span>
+              <span className="ml-2 text-xs text-gray-500">
+                ({aiVariety === 1 ? 'Best only' : `Top ${aiVariety}`})
+              </span>
             </label>
             <div className="flex items-center gap-3">
               <input
@@ -137,8 +139,8 @@ export default function AiControlPanel() {
               <span className="text-sm text-gray-300 w-8 text-center">{aiVariety}</span>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {aiVariety === 1 
-                ? 'Always plays the best move' 
+              {aiVariety === 1
+                ? 'Always plays the best move'
                 : `Randomly selects from top ${aiVariety} moves`}
             </p>
           </div>

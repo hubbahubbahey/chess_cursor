@@ -30,7 +30,9 @@ isProject: false
 Based on the application interface analysis, the following UI/UX issues need to be addressed:
 
 ### 1. Redundant "LM Studio not connected" Messages
+
 **Problem:** The connection status message appears in multiple places:
+
 - AI Coach panel header (CoachPanel.tsx line 116)
 - CoachChatPanel empty state message (CoachChatPanel.tsx line 47)
 - Potentially a bottom pop-up/toast notification (needs verification)
@@ -38,13 +40,16 @@ Based on the application interface analysis, the following UI/UX issues need to 
 **Impact:** Visual clutter, redundant information, poor user experience
 
 **Solution:**
+
 - Keep connection status only in the AI Coach panel header
 - Remove the message from CoachChatPanel empty state (show generic helpful message instead)
 - If a bottom pop-up exists, make it dismissible and only show when CoachPanel is closed
 - Use a single source of truth for connection status display
 
 ### 2. Unclear "White"/"Black" Tags in Openings List
+
 **Problem:** The badges showing "White" or "Black" (Sidebar.tsx lines 96-101) don't clearly indicate their purpose. Users may not understand if this means:
+
 - Playing as White/Black
 - Filtering by color
 - Opening color preference
@@ -52,13 +57,16 @@ Based on the application interface analysis, the following UI/UX issues need to 
 **Impact:** Confusion about what the tags represent, reduced usability
 
 **Solution:**
+
 - Change label to "Play as White" or "Play as Black" for clarity
 - Add tooltip on hover: "This opening is played as [White/Black]"
 - Consider using icons (chess piece icons) alongside or instead of text
 - Improve visual distinction between White and Black badges
 
 ### 3. Overlapping Text and Visual Artifacts
-**Problem:** 
+
+**Problem:**
+
 - "explore" text visible behind the chess board
 - Floating dropdown arrow icons above the board
 - Potential z-index or positioning issues
@@ -66,6 +74,7 @@ Based on the application interface analysis, the following UI/UX issues need to 
 **Impact:** Visual clutter, unprofessional appearance, potential interaction issues
 
 **Solution:**
+
 - Review z-index values for all board-related components
 - Ensure chess board container has proper background and z-index
 - Check for any absolute/fixed positioned elements that might overlap
@@ -73,22 +82,26 @@ Based on the application interface analysis, the following UI/UX issues need to 
 - Ensure proper layering: board > controls > overlays
 
 ### 4. Redundant Refresh Buttons
+
 **Problem:** Multiple refresh icons/buttons in the AI Coach panel may confuse users about which one to use
 
 **Impact:** UI inconsistency, potential confusion
 
 **Solution:**
+
 - Audit all refresh buttons in CoachPanel
 - Consolidate to a single, clearly labeled refresh action
 - Ensure refresh button is properly positioned and styled consistently
 - Add loading state during refresh operation
 
 ### 5. Connection Status UI Improvements
+
 **Problem:** Connection status display could be more informative and actionable
 
 **Impact:** Users may not know how to fix connection issues
 
 **Solution:**
+
 - Improve visual hierarchy of connection status
 - Add actionable button/link when disconnected (e.g., "Open Settings" or "Check Connection")
 - Show connection status with appropriate icons and colors
@@ -96,11 +109,13 @@ Based on the application interface analysis, the following UI/UX issues need to 
 - Consider auto-retry mechanism with visual feedback
 
 ### 6. Notification System
+
 **Problem:** If bottom pop-up exists, it should be dismissible and context-aware
 
 **Impact:** Persistent notifications can be annoying and block content
 
 **Solution:**
+
 - Create a dismissible toast/notification component
 - Only show when CoachPanel is closed (if connection is needed)
 - Auto-dismiss after a few seconds or allow manual dismiss
@@ -109,32 +124,41 @@ Based on the application interface analysis, the following UI/UX issues need to 
 ## Implementation Plan
 
 ### Phase 1: Remove Redundancy (High Priority)
+
 **Files to modify:**
+
 - `src/components/CoachChatPanel.tsx`
 - `src/components/CoachPanel.tsx`
 
 **Changes:**
+
 1. Remove connection status message from CoachChatPanel empty state
 2. Replace with generic helpful message that doesn't duplicate connection status
 3. Ensure CoachPanel header is the single source of truth for connection status
 
 ### Phase 2: Improve Clarity (High Priority)
+
 **Files to modify:**
+
 - `src/components/Sidebar.tsx`
 
 **Changes:**
+
 1. Update badge text from "White"/"Black" to "Play as White"/"Play as Black"
 2. Add tooltip with explanation
 3. Improve visual styling for better distinction
 4. Consider adding chess piece icons
 
 ### Phase 3: Fix Visual Artifacts (High Priority)
+
 **Files to modify:**
+
 - `src/components/ChessBoard.tsx`
 - `src/index.css`
 - `src/App.tsx`
 
 **Changes:**
+
 1. Review and fix z-index values
 2. Ensure proper background colors and opacity
 3. Remove any debug/development text
@@ -142,32 +166,41 @@ Based on the application interface analysis, the following UI/UX issues need to 
 5. Test layering of all board-related components
 
 ### Phase 4: Consolidate Controls (Medium Priority)
+
 **Files to modify:**
+
 - `src/components/CoachPanel.tsx`
 
 **Changes:**
+
 1. Audit all refresh/action buttons
 2. Consolidate redundant controls
 3. Improve button placement and styling
 4. Add loading states
 
 ### Phase 5: Enhanced Connection Status (Medium Priority)
+
 **Files to modify:**
+
 - `src/components/CoachPanel.tsx`
 
 **Changes:**
+
 1. Improve connection status visual design
 2. Add actionable buttons when disconnected
 3. Add tooltips with troubleshooting info
 4. Improve icon and color usage
 
 ### Phase 6: Notification System (Low Priority)
+
 **Files to create/modify:**
+
 - `src/components/Toast.tsx` (new)
 - `src/components/CoachPanel.tsx`
 - `src/App.tsx`
 
 **Changes:**
+
 1. Create reusable Toast/Notification component
 2. Implement dismissible notifications
 3. Add context-aware display logic

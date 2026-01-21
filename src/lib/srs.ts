@@ -1,6 +1,6 @@
 /**
  * SM-2 Spaced Repetition Algorithm Implementation
- * 
+ *
  * Based on the SuperMemo 2 algorithm by Piotr Wozniak
  * https://www.supermemo.com/en/archives1990-2015/english/ol/sm2
  */
@@ -35,20 +35,21 @@ export interface ReviewData {
  */
 export function difficultyToQuality(difficulty: 'again' | 'hard' | 'good' | 'easy'): ReviewQuality {
   switch (difficulty) {
-    case 'again': return 1  // Will reset the card
-    case 'hard': return 3   // Correct but difficult
-    case 'good': return 4   // Correct with some hesitation
-    case 'easy': return 5   // Perfect recall
+    case 'again':
+      return 1 // Will reset the card
+    case 'hard':
+      return 3 // Correct but difficult
+    case 'good':
+      return 4 // Correct with some hesitation
+    case 'easy':
+      return 5 // Perfect recall
   }
 }
 
 /**
  * Calculate the next review parameters based on the SM-2 algorithm
  */
-export function calculateNextReview(
-  quality: ReviewQuality,
-  currentData: ReviewData
-): ReviewResult {
+export function calculateNextReview(quality: ReviewQuality, currentData: ReviewData): ReviewResult {
   let { easeFactor, interval, repetitions } = currentData
 
   // If quality is below 3, reset the repetitions (card needs to be relearned)
@@ -71,7 +72,7 @@ export function calculateNextReview(
   // Update ease factor
   // EF' = EF + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02))
   const newEaseFactor = easeFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02))
-  
+
   // Ease factor should never go below 1.3
   easeFactor = Math.max(1.3, newEaseFactor)
 
@@ -143,7 +144,10 @@ export function formatInterval(days: number): string {
 /**
  * Get mastery level based on repetitions and ease factor
  */
-export function getMasteryLevel(repetitions: number, easeFactor: number): {
+export function getMasteryLevel(
+  repetitions: number,
+  easeFactor: number
+): {
   level: 'new' | 'learning' | 'reviewing' | 'mastered'
   color: string
   label: string

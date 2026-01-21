@@ -110,7 +110,10 @@ export async function checkConnection(): Promise<{ connected: boolean; error?: s
         return { connected: false, error: 'Connection timed out' }
       }
       if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
-        return { connected: false, error: 'LM Studio is not running. Please start LM Studio and load a model.' }
+        return {
+          connected: false,
+          error: 'LM Studio is not running. Please start LM Studio and load a model.'
+        }
       }
       return { connected: false, error: error.message }
     }
@@ -130,9 +133,10 @@ export async function sendChatCompletion(
 ): Promise<{ success: boolean; content?: string; error?: string }> {
   try {
     // Add system prompt as the first message if not already present
-    const messagesWithSystem: ChatMessage[] = messages[0]?.role === 'system'
-      ? messages
-      : [{ role: 'system', content: SYSTEM_PROMPT }, ...messages]
+    const messagesWithSystem: ChatMessage[] =
+      messages[0]?.role === 'system'
+        ? messages
+        : [{ role: 'system', content: SYSTEM_PROMPT }, ...messages]
 
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout for responses
@@ -156,9 +160,9 @@ export async function sendChatCompletion(
 
     if (!response.ok) {
       const errorText = await response.text()
-      return { 
-        success: false, 
-        error: `LM Studio error (${response.status}): ${errorText}` 
+      return {
+        success: false,
+        error: `LM Studio error (${response.status}): ${errorText}`
       }
     }
 
@@ -173,10 +177,16 @@ export async function sendChatCompletion(
   } catch (error) {
     if (error instanceof Error) {
       if (error.name === 'AbortError') {
-        return { success: false, error: 'Request timed out. The model may be processing a complex request.' }
+        return {
+          success: false,
+          error: 'Request timed out. The model may be processing a complex request.'
+        }
       }
       if (error.message.includes('ECONNREFUSED') || error.message.includes('fetch failed')) {
-        return { success: false, error: 'Cannot connect to LM Studio. Please ensure it is running and a model is loaded.' }
+        return {
+          success: false,
+          error: 'Cannot connect to LM Studio. Please ensure it is running and a model is loaded.'
+        }
       }
       return { success: false, error: error.message }
     }
@@ -203,16 +213,19 @@ export function buildCoachPrompt(
   }
 ): string {
   const { fen, moveHistory, playerColor, openingName, customQuestion, stockfishAnalysis } = context
-  
+
   // Build move history string in PGN-like format
-  const movesStr = moveHistory.length > 0
-    ? moveHistory.reduce((acc, move, i) => {
-        if (i % 2 === 0) {
-          return acc + `${Math.floor(i / 2) + 1}. ${move} `
-        }
-        return acc + `${move} `
-      }, '').trim()
-    : 'No moves played yet'
+  const movesStr =
+    moveHistory.length > 0
+      ? moveHistory
+        .reduce((acc, move, i) => {
+          if (i % 2 === 0) {
+            return acc + `${Math.floor(i / 2) + 1}. ${move} `
+          }
+          return acc + `${move} `
+        }, '')
+        .trim()
+      : 'No moves played yet'
 
   const positionContext = `
 Current position (FEN): ${fen}
@@ -227,7 +240,7 @@ ${openingName ? `Opening: ${openingName}` : ''}
     try {
       const game = new Chess(fen)
       boardVisualization = game.ascii()
-    } catch (e) {
+    } catch {
       // If board generation fails, continue without it
     }
   }
@@ -244,7 +257,7 @@ ${boardVisualization ? `\nBoard Visual:\n${boardVisualization}` : ''}
     : ''
 
   // Add explicit instruction about player's side
-  const playerSideInstruction = playerColor 
+  const playerSideInstruction = playerColor
     ? `\n\nIMPORTANT: The player is playing as ${playerColor}. Only provide advice, moves, and analysis for ${playerColor}. Do NOT give advice for ${playerColor === 'white' ? 'Black' : 'White'}. Focus exclusively on what ${playerColor} should do.`
     : ''
 
