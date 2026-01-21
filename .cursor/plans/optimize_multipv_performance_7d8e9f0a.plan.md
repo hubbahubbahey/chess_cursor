@@ -4,13 +4,13 @@ overview: Reduce the performance impact of multipv by using time-based search or
 todos:
   - id: add-time-based-search
     content: Add option to use time-based search (movetime) instead of depth for multipv
-    status: pending
+    status: cancelled
   - id: reduce-depth-for-multipv
     content: Reduce depth by 1-2 when using multipv to compensate for extra calculation
-    status: pending
+    status: completed
   - id: add-early-termination
     content: Accept moves as soon as we have enough top moves, even if not at full depth
-    status: pending
+    status: cancelled
 isProject: false
 ---
 

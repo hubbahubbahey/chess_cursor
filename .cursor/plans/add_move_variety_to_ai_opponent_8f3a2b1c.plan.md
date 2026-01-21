@@ -4,16 +4,16 @@ overview: Add variety to AI opponent by allowing it to randomly select from Stoc
 todos:
   - id: add-variety-state
     content: Add aiVariety state and setter to useAppStore
-    status: pending
+    status: completed
   - id: implement-get-top-moves
     content: Implement getTopMoves function in engine.ts using Stockfish multipv
-    status: pending
+    status: completed
   - id: update-trigger-ai-move
     content: Update triggerAiMove to use variety setting and randomly select from top moves
-    status: pending
+    status: completed
   - id: add-variety-ui
     content: Add variety control slider/selector to AiControlPanel
-    status: pending
+    status: completed
 isProject: false
 ---
 

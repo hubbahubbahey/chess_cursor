@@ -47,7 +47,7 @@ export default function CoachChatPanel() {
             <p className="text-gray-500 text-sm">
               {coachConnected 
                 ? "Ask me anything about the position! Use the quick buttons above or type your own question."
-                : "The AI Coach is ready to help. Check the connection status in the panel header above."}
+                : "The AI Coach is ready to help. Configure your connection in the settings above."}
             </p>
           </div>
         ) : (
