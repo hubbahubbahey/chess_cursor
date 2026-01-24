@@ -562,6 +562,71 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  // Move analysis state
+  moveAnalysisEnabled: false,
+  currentMoveAnalysis: null,
+  moveAnalysisHistory: [],
+  toastMessage: null,
+
+  setMoveAnalysisEnabled: (enabled) => set({ moveAnalysisEnabled: enabled }),
+
+  clearToast: () => set({ toastMessage: null, currentMoveAnalysis: null }),
+
+  analyzeMoveQuality: async (fenBefore, fenAfter, move) => {
+    try {
+      const result = await window.electronAPI.analyzeMoveQuality(fenBefore, fenAfter, 15)
+      
+      const moveAnalysis: MoveAnalysis = {
+        moveNumber: Math.floor(get().moveHistory.length / 2) + 1,
+        moveSan: move.san,
+        from: move.from,
+        to: move.to,
+        evalBefore: result.evalBefore,
+        evalAfter: result.evalAfter,
+        quality: result.quality,
+        bestMove: result.bestMove,
+        bestMoveSan: result.bestMoveSan,
+        evalDelta: result.evalDelta
+      }
+      
+      // Only show toast and highlight for suboptimal moves
+      if (result.quality !== 'good') {
+        const qualityLabels: Record<'blunder' | 'mistake' | 'inaccuracy', string> = {
+          blunder: 'Blunder',
+          mistake: 'Mistake',
+          inaccuracy: 'Inaccuracy'
+        }
+        
+        // Type assertion since we've already checked result.quality !== 'good'
+        const quality = result.quality as 'blunder' | 'mistake' | 'inaccuracy'
+        
+        const toastMessage: ToastMessage = {
+          type: quality,
+          message: `${qualityLabels[quality]}: ${move.san} - Best was ${result.bestMoveSan}`,
+          id: `toast-${Date.now()}`
+        }
+        
+        set({
+          currentMoveAnalysis: moveAnalysis,
+          moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis],
+          toastMessage
+        })
+        
+        // Auto-open coach panel for blunders to show explanation
+        if (result.quality === 'blunder' && !get().coachPanelOpen) {
+          set({ coachPanelOpen: true })
+        }
+      } else {
+        set({
+          currentMoveAnalysis: moveAnalysis,
+          moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis]
+        })
+      }
+    } catch (error) {
+      console.error('Move analysis failed:', error)
+    }
+  },
+
   askCoach: async (analysisType, customQuestion) => {
     const { fen, moveHistory, currentOpening, aiColor, aiEnabled, coachMessages } = get()
 
