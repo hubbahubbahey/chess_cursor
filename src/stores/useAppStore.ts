@@ -69,6 +69,26 @@ export interface CoachMessage {
   analysisType?: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom'
 }
 
+// Move analysis types
+export interface MoveAnalysis {
+  moveNumber: number
+  moveSan: string
+  from: string
+  to: string
+  evalBefore: { type: 'cp' | 'mate'; value: number }
+  evalAfter: { type: 'cp' | 'mate'; value: number }
+  quality: 'blunder' | 'mistake' | 'inaccuracy' | 'good'
+  bestMove: string
+  bestMoveSan: string
+  evalDelta: number
+}
+
+export interface ToastMessage {
+  type: 'blunder' | 'mistake' | 'inaccuracy' | 'info'
+  message: string
+  id: string
+}
+
 export interface CoachSettings {
   endpoint: string
   model: string
@@ -155,6 +175,15 @@ interface AppState {
     analysisType: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom',
     customQuestion?: string
   ) => Promise<void>
+
+  // Move analysis
+  moveAnalysisEnabled: boolean
+  currentMoveAnalysis: MoveAnalysis | null
+  moveAnalysisHistory: MoveAnalysis[]
+  toastMessage: ToastMessage | null
+  setMoveAnalysisEnabled: (enabled: boolean) => void
+  analyzeMoveQuality: (fenBefore: string, fenAfter: string, move: { from: string; to: string; san: string }) => Promise<void>
+  clearToast: () => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -176,12 +205,29 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   makeMove: (from, to, promotion) => {
-    const { game } = get()
+    const { game, moveAnalysisEnabled, fen: fenBefore, aiEnabled, aiColor } = get()
     try {
       const move = game.move({ from, to, promotion: promotion || 'q' })
       if (move) {
-        set({ fen: game.fen(), game })
+        const fenAfter = game.fen()
+        set({ fen: fenAfter, game })
         get().addToHistory(move.san)
+        
+        // Trigger async analysis if enabled
+        // Only analyze player moves (not AI moves)
+        if (moveAnalysisEnabled) {
+          const currentTurn = game.turn() === 'w' ? 'black' : 'white' // Who just moved
+          const shouldAnalyze = !aiEnabled || currentTurn !== aiColor
+          
+          if (shouldAnalyze) {
+            get().analyzeMoveQuality(fenBefore, fenAfter, {
+              from,
+              to,
+              san: move.san
+            })
+          }
+        }
+        
         return true
       }
       return false

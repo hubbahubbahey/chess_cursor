@@ -48,7 +48,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Stockfish Analysis
   analyzePosition: (fen: string, depth?: number) =>
-    ipcRenderer.invoke('stockfish:analyze', fen, depth)
+    ipcRenderer.invoke('stockfish:analyze', fen, depth),
+  analyzeMoveQuality: (fenBefore: string, fenAfter: string, depth?: number) =>
+    ipcRenderer.invoke('stockfish:analyzeMoveQuality', fenBefore, fenAfter, depth)
 })
 
 // Coach-related types
@@ -109,6 +111,7 @@ export interface ElectronAPI {
   buildCoachPrompt: (analysisType: string, context: CoachContext) => Promise<string>
   // Stockfish Analysis
   analyzePosition: (fen: string, depth?: number) => Promise<StockfishAnalysis>
+  analyzeMoveQuality: (fenBefore: string, fenAfter: string, depth?: number) => Promise<MoveQualityAnalysis>
 }
 
 export interface Position {
@@ -155,6 +158,15 @@ export interface StockfishAnalysis {
   evalText: string
   bestMove: string
   bestMoveSan: string
+}
+
+export interface MoveQualityAnalysis {
+  evalBefore: { type: 'cp' | 'mate'; value: number }
+  evalAfter: { type: 'cp' | 'mate'; value: number }
+  bestMove: string
+  bestMoveSan: string
+  evalDelta: number
+  quality: 'blunder' | 'mistake' | 'inaccuracy' | 'good'
 }
 
 declare global {
