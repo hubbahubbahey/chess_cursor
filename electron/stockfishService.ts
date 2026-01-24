@@ -237,12 +237,18 @@ export async function analyzeMoveQuality(
     
     // Calculate eval delta from the perspective of the player who made the move
     // The player who just moved is now waiting (it's opponent's turn in fenAfter)
-    const game = new Chess(fenAfter)
-    const playerJustMoved = game.turn() === 'w' ? 'black' : 'white'
+    const gameAfter = new Chess(fenAfter)
+    const gameBefore = new Chess(fenBefore)
+    const playerJustMoved = gameAfter.turn() === 'w' ? 'black' : 'white'
+    
+    // Stockfish evaluations are from the side-to-move's perspective
+    // We need to convert both evals to the same perspective (the player who just moved)
+    const sideToMoveBefore = gameBefore.turn() === 'w' ? 'white' : 'black'
+    const sideToMoveAfter = gameAfter.turn() === 'w' ? 'white' : 'black'
     
     // Convert evaluations to centipawns from the moving player's perspective
-    const cpBefore = evaluationToCentipawns(evalBefore, playerJustMoved)
-    const cpAfter = evaluationToCentipawns(evalAfter, playerJustMoved)
+    const cpBefore = evaluationToCentipawns(evalBefore, sideToMoveBefore, playerJustMoved)
+    const cpAfter = evaluationToCentipawns(evalAfter, sideToMoveAfter, playerJustMoved)
     
     // Negative delta means the position got worse for the player who moved
     const evalDelta = cpAfter - cpBefore
@@ -298,30 +304,48 @@ function parseEvaluation(evalText: string): { type: 'cp' | 'mate'; value: number
       const moves = parseInt(match[1], 10)
       return { type: 'mate', value: isNegative ? -moves : moves }
     }
+    // If "Mate" is in text but regex failed, return a safe default mate value
+    // This handles edge cases where the format is unexpected
+    return { type: 'mate', value: isNegative ? -1 : 1 }
   }
   
   // Centipawn evaluation
   const cp = Math.round(parseFloat(evalText) * 100)
+  // Handle NaN case - if parseFloat failed, return 0
+  if (isNaN(cp)) {
+    console.warn('Failed to parse evaluation text:', evalText)
+    return { type: 'cp', value: 0 }
+  }
   return { type: 'cp', value: cp }
 }
 
 /**
  * Convert evaluation to centipawns from a specific player's perspective
- * @param evaluation - The evaluation object
- * @param player - The player perspective ('white' or 'black')
- * @returns Evaluation in centipawns (positive = good for player, negative = bad)
+ * Stockfish evaluations are always from the side-to-move's perspective
+ * @param evaluation - The evaluation object (from side-to-move's perspective)
+ * @param sideToMove - Whose turn it was when the evaluation was computed
+ * @param targetPlayer - The player perspective we want the result in
+ * @returns Evaluation in centipawns (positive = good for targetPlayer, negative = bad)
  */
 function evaluationToCentipawns(
   evaluation: { type: 'cp' | 'mate'; value: number },
-  player: 'white' | 'black'
+  sideToMove: 'white' | 'black',
+  targetPlayer: 'white' | 'black'
 ): number {
+  // Stockfish UCI evaluations are from side-to-move's perspective
+  // Positive value = good for side-to-move
+  
   if (evaluation.type === 'mate') {
-    // Mate is evaluated as a very large number
-    // Positive mate value = good for white, negative = good for black
+    // Positive mate value = side-to-move is winning (can deliver mate)
+    // Negative mate value = side-to-move is losing (getting mated)
     const mateValue = evaluation.value > 0 ? 10000 : -10000
-    return player === 'white' ? mateValue : -mateValue
+    // If targetPlayer is the same as sideToMove, keep the sign
+    // Otherwise, flip it
+    return sideToMove === targetPlayer ? mateValue : -mateValue
   }
   
-  // CP values are from white's perspective, flip for black
-  return player === 'white' ? evaluation.value : -evaluation.value
+  // CP values are from side-to-move's perspective
+  // If targetPlayer matches sideToMove, keep the value
+  // Otherwise, flip the sign
+  return sideToMove === targetPlayer ? evaluation.value : -evaluation.value
 }
