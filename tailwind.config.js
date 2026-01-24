@@ -33,6 +33,15 @@ export default {
       boxShadow: {
         board: '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
         card: '0 4px 16px rgba(0, 0, 0, 0.3)'
+      },
+      keyframes: {
+        slideIn: {
+          '0%': { transform: 'translateX(100%)', opacity: '0' },
+          '100%': { transform: 'translateX(0)', opacity: '1' }
+        }
+      },
+      animation: {
+        slideIn: 'slideIn 0.3s ease-out'
       }
     }
   },

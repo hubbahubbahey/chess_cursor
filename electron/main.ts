@@ -23,7 +23,7 @@ import {
   ChatMessage,
   CoachSettings
 } from './llmService'
-import { getEngineAnalysis } from './stockfishService'
+import { getEngineAnalysis, analyzeMoveQuality } from './stockfishService'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -178,5 +178,14 @@ ipcMain.handle('stockfish:analyze', async (_, fen: string, depth?: number) => {
     return await getEngineAnalysis(fen, depth || 15)
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'Stockfish analysis failed')
+  }
+})
+
+// IPC handler for move quality analysis
+ipcMain.handle('stockfish:analyzeMoveQuality', async (_, fenBefore: string, fenAfter: string, depth?: number) => {
+  try {
+    return await analyzeMoveQuality(fenBefore, fenAfter, depth || 15)
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Move quality analysis failed')
   }
 })
