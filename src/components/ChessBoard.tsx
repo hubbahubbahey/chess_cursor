@@ -51,7 +51,8 @@ export default function ChessBoard({
     triggerAiMove,
     game,
     coachPanelOpen,
-    coachHighlightSquares
+    coachHighlightSquares,
+    currentMoveAnalysis
   } = useAppStore()
 
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null)
@@ -267,8 +268,25 @@ export default function ChessBoard({
       }
     })
 
+    // Move quality indicators (blunders, mistakes, inaccuracies)
+    if (currentMoveAnalysis && lastMove) {
+      const qualityColors = {
+        blunder: 'rgba(239, 68, 68, 0.6)',      // red-500
+        mistake: 'rgba(249, 115, 22, 0.6)',     // orange-500
+        inaccuracy: 'rgba(234, 179, 8, 0.6)'    // yellow-500
+      }
+      
+      if (currentMoveAnalysis.quality !== 'good' && qualityColors[currentMoveAnalysis.quality]) {
+        // Apply colored border to the destination square
+        styles[lastMove.to] = {
+          ...styles[lastMove.to],
+          boxShadow: `inset 0 0 0 4px ${qualityColors[currentMoveAnalysis.quality]}`
+        }
+      }
+    }
+
     return styles
-  }, [legalMoves, selectedSquare, lastMove, highlightSquares, coachHighlightSquares])
+  }, [legalMoves, selectedSquare, lastMove, highlightSquares, coachHighlightSquares, currentMoveAnalysis])
 
   // Use propSize if provided, otherwise use state
   const currentSize = propSize !== undefined ? propSize : boardSize

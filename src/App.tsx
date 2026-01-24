@@ -29,6 +29,7 @@ import AiControlPanel from './components/AiControlPanel'
 import GameMoveList from './components/GameMoveList'
 import CoachChatPanel from './components/CoachChatPanel'
 import Accordion from './components/Accordion'
+import Toast from './components/Toast'
 import { AnalysisType } from './lib/coachContext'
 
 function App() {
@@ -310,6 +311,9 @@ function App() {
         <Sidebar />
         {renderMainContent()}
       </div>
+
+      {/* Toast notifications */}
+      <Toast />
     </div>
   )
 }

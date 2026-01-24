@@ -291,3 +291,35 @@ ${customQuestion || 'What do you think about this position?'}`
       return positionContext + playerSideInstruction
   }
 }
+
+/**
+ * Build a prompt for explaining blunders, mistakes, and inaccuracies
+ */
+export function buildBlunderExplanationPrompt(context: {
+  fen: string
+  playedMove: string
+  bestMove: string
+  evalDelta: number
+  quality: 'blunder' | 'mistake' | 'inaccuracy'
+  playerColor: 'white' | 'black'
+}): string {
+  const { fen, playedMove, bestMove, evalDelta, quality, playerColor } = context
+  
+  // Calculate eval loss (positive number)
+  const evalLoss = Math.abs(evalDelta)
+  const evalLossPawns = (evalLoss / 100).toFixed(1)
+  
+  const qualityLabel = quality.charAt(0).toUpperCase() + quality.slice(1)
+  
+  return `You are a chess coach. The player (playing as ${playerColor}) just played ${playedMove} which is a ${quality}.
+
+Position (FEN): ${fen}
+The best move was ${bestMove}.
+Evaluation dropped by ${evalLossPawns} pawns (${evalLoss} centipawns).
+
+In 2-3 concise sentences, explain:
+1. Why ${playedMove} was a ${quality} (what does it lose or allow?)
+2. What ${bestMove} achieves instead (what's the key tactical or strategic point?)
+
+Be encouraging but educational. Focus on the key tactical or strategic point the player missed.`
+}

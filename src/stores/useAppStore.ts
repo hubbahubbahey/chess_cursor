@@ -69,6 +69,26 @@ export interface CoachMessage {
   analysisType?: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom'
 }
 
+// Move analysis types
+export interface MoveAnalysis {
+  moveNumber: number
+  moveSan: string
+  from: string
+  to: string
+  evalBefore: { type: 'cp' | 'mate'; value: number }
+  evalAfter: { type: 'cp' | 'mate'; value: number }
+  quality: 'blunder' | 'mistake' | 'inaccuracy' | 'good'
+  bestMove: string
+  bestMoveSan: string
+  evalDelta: number
+}
+
+export interface ToastMessage {
+  type: 'blunder' | 'mistake' | 'inaccuracy' | 'info'
+  message: string
+  id: string
+}
+
 export interface CoachSettings {
   endpoint: string
   model: string
@@ -155,6 +175,15 @@ interface AppState {
     analysisType: 'position' | 'moves' | 'mistakes' | 'plan' | 'custom',
     customQuestion?: string
   ) => Promise<void>
+
+  // Move analysis
+  moveAnalysisEnabled: boolean
+  currentMoveAnalysis: MoveAnalysis | null
+  moveAnalysisHistory: MoveAnalysis[]
+  toastMessage: ToastMessage | null
+  setMoveAnalysisEnabled: (enabled: boolean) => void
+  analyzeMoveQuality: (fenBefore: string, fenAfter: string, move: { from: string; to: string; san: string }) => Promise<void>
+  clearToast: () => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -176,12 +205,29 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   makeMove: (from, to, promotion) => {
-    const { game } = get()
+    const { game, moveAnalysisEnabled, fen: fenBefore, aiEnabled, aiColor } = get()
     try {
       const move = game.move({ from, to, promotion: promotion || 'q' })
       if (move) {
-        set({ fen: game.fen(), game })
+        const fenAfter = game.fen()
+        set({ fen: fenAfter, game })
         get().addToHistory(move.san)
+        
+        // Trigger async analysis if enabled
+        // Only analyze player moves (not AI moves)
+        if (moveAnalysisEnabled) {
+          const currentTurn = game.turn() === 'w' ? 'black' : 'white' // Who just moved
+          const shouldAnalyze = !aiEnabled || currentTurn !== aiColor
+          
+          if (shouldAnalyze) {
+            get().analyzeMoveQuality(fenBefore, fenAfter, {
+              from,
+              to,
+              san: move.san
+            })
+          }
+        }
+        
         return true
       }
       return false
@@ -513,6 +559,71 @@ export const useAppStore = create<AppState>((set, get) => ({
       get().checkCoachConnection()
     } catch (error) {
       console.error('Failed to update coach settings:', error)
+    }
+  },
+
+  // Move analysis state
+  moveAnalysisEnabled: false,
+  currentMoveAnalysis: null,
+  moveAnalysisHistory: [],
+  toastMessage: null,
+
+  setMoveAnalysisEnabled: (enabled) => set({ moveAnalysisEnabled: enabled }),
+
+  clearToast: () => set({ toastMessage: null, currentMoveAnalysis: null }),
+
+  analyzeMoveQuality: async (fenBefore, fenAfter, move) => {
+    try {
+      const result = await window.electronAPI.analyzeMoveQuality(fenBefore, fenAfter, 15)
+      
+      const moveAnalysis: MoveAnalysis = {
+        moveNumber: Math.floor(get().moveHistory.length / 2) + 1,
+        moveSan: move.san,
+        from: move.from,
+        to: move.to,
+        evalBefore: result.evalBefore,
+        evalAfter: result.evalAfter,
+        quality: result.quality,
+        bestMove: result.bestMove,
+        bestMoveSan: result.bestMoveSan,
+        evalDelta: result.evalDelta
+      }
+      
+      // Only show toast and highlight for suboptimal moves
+      if (result.quality !== 'good') {
+        const qualityLabels: Record<'blunder' | 'mistake' | 'inaccuracy', string> = {
+          blunder: 'Blunder',
+          mistake: 'Mistake',
+          inaccuracy: 'Inaccuracy'
+        }
+        
+        // Type assertion since we've already checked result.quality !== 'good'
+        const quality = result.quality as 'blunder' | 'mistake' | 'inaccuracy'
+        
+        const toastMessage: ToastMessage = {
+          type: quality,
+          message: `${qualityLabels[quality]}: ${move.san} - Best was ${result.bestMoveSan}`,
+          id: `toast-${Date.now()}`
+        }
+        
+        set({
+          currentMoveAnalysis: moveAnalysis,
+          moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis],
+          toastMessage
+        })
+        
+        // Auto-open coach panel for blunders to show explanation
+        if (result.quality === 'blunder' && !get().coachPanelOpen) {
+          set({ coachPanelOpen: true })
+        }
+      } else {
+        set({
+          currentMoveAnalysis: moveAnalysis,
+          moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis]
+        })
+      }
+    } catch (error) {
+      console.error('Move analysis failed:', error)
     }
   },
 
