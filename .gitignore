@@ -33,3 +33,13 @@ npm-debug.log*
 # Temporary files
 *.tmp
 *.temp
+
+# Stockfish (binary / full tree – choose one approach)
+stockfish/
+
+# Lint output
+lint_output*.txt
+lint_report.txt
+
+# Cursor (optional)
+.cursor/
