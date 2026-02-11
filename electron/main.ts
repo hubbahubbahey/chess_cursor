@@ -1,5 +1,6 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog } from 'electron'
 import path from 'path'
+import fs from 'fs'
 import {
   initDatabase,
   getOpenings,
@@ -12,7 +13,9 @@ import {
   updateReview,
   getStats,
   getAllStats,
-  updateStats
+  updateStats,
+  getExportData,
+  importDatabase
 } from './database'
 import {
   sendChatCompletion,
@@ -20,6 +23,7 @@ import {
   getSettings,
   saveSettings,
   buildCoachPrompt,
+  buildBlunderExplanationPrompt,
   ChatMessage,
   CoachSettings
 } from './llmService'
@@ -28,19 +32,23 @@ import { getEngineAnalysis, analyzeMoveQuality } from './stockfishService'
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  // titleBarStyle: 'hiddenInset' is macOS-only; use default title bar on Windows/Linux
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1400,
     height: 900,
     minWidth: 1100,
     minHeight: 700,
     backgroundColor: '#0f0d0b',
-    titleBarStyle: 'hiddenInset',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true
     }
-  })
+  }
+  if (process.platform === 'darwin') {
+    windowOptions.titleBarStyle = 'hiddenInset'
+  }
+  mainWindow = new BrowserWindow(windowOptions)
 
   // In development, Vite runs on localhost:5173
   const isDev = !app.isPackaged
@@ -130,6 +138,43 @@ ipcMain.handle('db:getAllStats', async () => {
   return getAllStats()
 })
 
+ipcMain.handle('db:getExportData', async () => {
+  return getExportData()
+})
+
+ipcMain.handle('db:exportToFile', async () => {
+  const win = mainWindow ?? BrowserWindow.getFocusedWindow()
+const { filePath, canceled } = await dialog.showSaveDialog(win ?? undefined, {
+    title: 'Export backup',
+    defaultPath: path.join(app.getPath('documents'), 'chess-trainer-backup.json'),
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  })
+  if (canceled || !filePath) return { canceled: true }
+  fs.writeFileSync(filePath, getExportData(), 'utf-8')
+  return { canceled: false, path: filePath }
+})
+
+ipcMain.handle('db:importFromFile', async () => {
+  const win = mainWindow ?? BrowserWindow.getFocusedWindow()
+const { filePaths, canceled } = await dialog.showOpenDialog(win ?? undefined, {
+    title: 'Import backup',
+    properties: ['openFile'],
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  })
+  if (canceled || !filePaths?.length) return { canceled: true }
+  try {
+    const content = fs.readFileSync(filePaths[0], 'utf-8')
+    const result = importDatabase(content)
+    return { canceled: false, ...result }
+  } catch (err) {
+    return {
+      canceled: false,
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to read file'
+    }
+  }
+})
+
 // IPC handlers for AI Coach (LLM)
 ipcMain.handle('llm:chat', async (_, messages: ChatMessage[]) => {
   return sendChatCompletion(messages)
@@ -189,3 +234,29 @@ ipcMain.handle('stockfish:analyzeMoveQuality', async (_, fenBefore: string, fenA
     throw new Error(error instanceof Error ? error.message : 'Move quality analysis failed')
   }
 })
+
+// IPC handler for blunder/mistake/inaccuracy explanation
+ipcMain.handle(
+  'llm:explainBlunder',
+  async (
+    _,
+    context: {
+      fen: string
+      playedMove: string
+      bestMove: string
+      evalDelta: number
+      quality: 'blunder' | 'mistake' | 'inaccuracy'
+      playerColor: 'white' | 'black'
+    }
+  ) => {
+    try {
+      const prompt = buildBlunderExplanationPrompt(context)
+      return await sendChatCompletion([{ role: 'user', content: prompt }])
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to explain move'
+      }
+    }
+  }
+)

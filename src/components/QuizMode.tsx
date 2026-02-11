@@ -71,39 +71,42 @@ export default function QuizMode() {
     setLegalMoves([])
     setAttempts(0)
     setShowHint(false)
-    setShowHint(false)
   }, [quizPositions, positions])
 
   // Check the user's move
   const handleMoveAttempt = useCallback((moveSan: string) => {
     setUserMove(moveSan)
-    setAttempts((prev) => prev + 1)
+    setAttempts((prevAttempts) => {
+      const newAttempts = prevAttempts + 1
 
-    if (moveSan === correctMove) {
-      setState('correct')
-      incrementQuizScore(true)
-      setQuestionsAnswered((prev) => prev + 1)
-      // Show the correct position
-      const game = new Chess(fen)
-      game.move(moveSan)
-      setFen(game.fen())
-    } else {
-      // Wrong answer - allow retry unless too many attempts
-      if (attempts >= 2) {
-        setState('incorrect')
-        incrementQuizScore(false)
+      if (moveSan === correctMove) {
+        setState('correct')
+        incrementQuizScore(true)
         setQuestionsAnswered((prev) => prev + 1)
-        // Show the correct move
+        // Show the correct position
         const game = new Chess(fen)
-        try {
-          game.move(correctMove)
-          setFen(game.fen())
-        } catch {
-          // ignore
+        game.move(moveSan)
+        setFen(game.fen())
+      } else {
+        // Wrong answer - allow retry unless too many attempts
+        if (newAttempts >= 2) {
+          setState('incorrect')
+          incrementQuizScore(false)
+          setQuestionsAnswered((prev) => prev + 1)
+          // Show the correct move
+          const game = new Chess(fen)
+          try {
+            game.move(correctMove)
+            setFen(game.fen())
+          } catch {
+            // ignore
+          }
         }
       }
-    }
-  }, [correctMove, attempts, fen, incrementQuizScore])
+
+      return newAttempts
+    })
+  }, [correctMove, fen, incrementQuizScore])
 
   // Initialize first question
   useEffect(() => {
@@ -237,6 +240,11 @@ export default function QuizMode() {
             }}
             customDarkSquareStyle={{ backgroundColor: '#b58863' }}
             customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}
+            customNotationStyle={{
+              fontWeight: 700,
+              color: 'rgba(0, 0, 0, 0.85)',
+              fontSize: '12px'
+            }}
             animationDuration={200}
             arePiecesDraggable={state === 'question'}
           />
@@ -282,7 +290,7 @@ export default function QuizMode() {
                     <XCircle size={18} />
                     <span>
                       <span className="font-mono">{userMove}</span> is not correct.
-                      {attempts < 3 ? ` Try again! (${3 - attempts} attempts left)` : ''}
+                      {attempts < 2 ? ` Try again! (${2 - attempts} attempt${2 - attempts === 1 ? '' : 's'} left)` : ''}
                     </span>
                   </div>
                 )}

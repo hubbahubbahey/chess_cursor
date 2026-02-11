@@ -31,6 +31,7 @@ import CoachChatPanel from './components/CoachChatPanel'
 import Accordion from './components/Accordion'
 import Toast from './components/Toast'
 import { AnalysisType } from './lib/coachContext'
+import { useKeyboardShortcuts } from './lib/keyboardShortcuts'
 
 function App() {
   const {
@@ -47,8 +48,13 @@ function App() {
     clearCoachHistory,
     checkCoachConnection,
     updateCoachSettings,
-    askCoach
+    askCoach,
+    goBack,
+    flipBoard,
+    resetGame
   } = useAppStore()
+
+  useKeyboardShortcuts({ goBack, flipBoard, resetGame })
 
   const [showSettings, setShowSettings] = useState(false)
   const [tempEndpoint, setTempEndpoint] = useState(coachSettings.endpoint)
@@ -82,12 +88,26 @@ function App() {
       case 'explore':
         return (
           <div className="flex-1 flex gap-4 p-4 overflow-hidden min-w-0">
-            <div className="flex-1 flex justify-center items-start min-w-0 overflow-hidden">
-              <div className="flex flex-col gap-4 min-h-0 w-full max-w-full">
-                <ChessBoard />
-                <div className="max-h-[40vh] min-h-0 flex flex-col">
-                  <CoachChatPanel />
+            <div className="flex-1 flex flex-col gap-4 min-w-0 overflow-hidden min-h-0">
+              {/* Top row: board and (when AI enabled) Game Moves side by side */}
+              <div className="flex gap-4 min-h-0 flex-1 min-w-0">
+                <div className="flex-1 flex justify-center items-start min-w-0 overflow-hidden">
+                  <div className="flex flex-col gap-4 min-h-0 w-full max-w-full h-full">
+                    <ChessBoard />
+                  </div>
                 </div>
+                {aiEnabled && (
+                  <div className="w-80 flex-shrink-0 bg-surface-800 border border-surface-700 rounded-xl overflow-hidden flex flex-col min-h-0 shadow-lg">
+                    <div className="px-4 py-2.5 border-b border-surface-700 flex items-center gap-2 flex-shrink-0">
+                      <Swords size={18} className="text-accent-gold" />
+                      <h3 className="font-display text-base font-medium text-white">Game Moves</h3>
+                    </div>
+                    <GameMoveList />
+                  </div>
+                )}
+              </div>
+              <div className="max-h-[40vh] min-h-0 flex flex-col flex-shrink-0">
+                <CoachChatPanel />
               </div>
             </div>
             {coachPanelOpen ? (
@@ -175,7 +195,7 @@ function App() {
                       value={tempEndpoint}
                       onChange={(e) => setTempEndpoint(e.target.value)}
                       className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-gold"
-                      placeholder="http://localhost:1234/v1/chat/completions"
+                      placeholder="http://192.168.68.60:1234/v1/chat/completions"
                     />
                     <div className="flex gap-2 mt-3">
                       <button
@@ -235,11 +255,7 @@ function App() {
                   <Accordion title="AI Opponent" icon={<Bot size={18} />} defaultOpen={true}>
                     <AiControlPanel />
                   </Accordion>
-                  {aiEnabled ? (
-                    <Accordion title="Game Moves" icon={<Swords size={18} />} defaultOpen={true}>
-                      <GameMoveList />
-                    </Accordion>
-                  ) : (
+                  {!aiEnabled && (
                     <>
                       <Accordion
                         title="Your Coach"
@@ -299,11 +315,19 @@ function App() {
   return (
     <div className="h-screen flex flex-col bg-surface-900">
       {/* Title bar drag region */}
-      <div className="h-8 drag-region bg-surface-800/50 flex items-center px-4">
-        <span className="no-drag text-sm text-gray-500 font-display">Chess Opening Trainer</span>
-        {currentOpening && (
-          <span className="no-drag ml-4 text-sm text-accent-gold">{currentOpening.name}</span>
-        )}
+      <div className="h-8 drag-region bg-surface-800/50 flex items-center justify-between px-4">
+        <div className="flex items-center">
+          <span className="no-drag text-sm text-gray-500 font-display">Chess Opening Trainer</span>
+          {currentOpening && (
+            <span className="no-drag ml-4 text-sm text-accent-gold">{currentOpening.name}</span>
+          )}
+        </div>
+        <span
+          className="no-drag text-xs text-gray-600"
+          title="← Back one move · F Flip board · R Reset"
+        >
+          ← F R
+        </span>
       </div>
 
       {/* Main content */}

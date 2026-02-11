@@ -70,11 +70,38 @@ export function initDatabase(): void {
   const userDataPath = app.getPath('userData')
   dbPath = path.join(userDataPath, 'chess-trainer.json')
 
-  // Reset and reseed data on startup
+  // Load existing database if it exists, otherwise create new one
   if (fs.existsSync(dbPath)) {
-    fs.unlinkSync(dbPath)
+    try {
+      const data = fs.readFileSync(dbPath, 'utf-8')
+      const parsed = JSON.parse(data) as Partial<Database>
+      const openings = parsed.openings || []
+      const positions = parsed.positions || []
+      const reviews = parsed.reviews || []
+      const stats = parsed.stats || []
+      const getMaxId = (items: { id: number }[]) =>
+        items.length > 0 ? Math.max(...items.map((item) => item.id)) : 0
+
+      db = {
+        openings,
+        positions,
+        reviews,
+        stats,
+        nextIds: parsed.nextIds || {
+          opening: getMaxId(openings) + 1,
+          position: getMaxId(positions) + 1,
+          review: getMaxId(reviews) + 1,
+          stats: getMaxId(stats) + 1
+        }
+      }
+      return
+    } catch (error) {
+      console.error('Failed to load database, creating new one:', error)
+      // Fall through to create new database
+    }
   }
 
+  // Create new database with seed data
   db = {
     openings: [],
     positions: [],
@@ -127,7 +154,11 @@ export function getReview(positionId: number): Review | undefined {
 
 export function getDueReviews(
   openingId?: number
-): (Review & { fen: string; move_san: string | null; explanation: string | null })[] {
+): (Review & {
+  fen: string
+  move_san: string | null
+  explanation: PositionExplanation | null
+})[] {
   if (!db) return []
   const today = new Date().toISOString().split('T')[0]
 
@@ -216,6 +247,59 @@ export function updateStats(positionId: number, correct: boolean): void {
     })
   }
   saveDatabase()
+}
+
+export function getExportData(): string {
+  const data = getDatabase()
+  return JSON.stringify(data, null, 2)
+}
+
+function isValidDatabaseShape(obj: unknown): obj is Database {
+  if (!obj || typeof obj !== 'object') return false
+  const o = obj as Record<string, unknown>
+  if (!Array.isArray(o.openings) || !Array.isArray(o.positions) || !Array.isArray(o.reviews) || !Array.isArray(o.stats)) {
+    return false
+  }
+  const nextIds = o.nextIds
+  if (!nextIds || typeof nextIds !== 'object') return false
+  const n = nextIds as Record<string, unknown>
+  return (
+    typeof n.opening === 'number' &&
+    typeof n.position === 'number' &&
+    typeof n.review === 'number' &&
+    typeof n.stats === 'number'
+  )
+}
+
+export function importDatabase(jsonString: string): { success: true } | { success: false; error: string } {
+  try {
+    const parsed = JSON.parse(jsonString) as unknown
+    if (!isValidDatabaseShape(parsed)) {
+      return { success: false, error: 'Invalid backup format: missing or invalid data' }
+    }
+    const getMaxId = (items: { id: number }[]) =>
+      items.length > 0 ? Math.max(...items.map((item) => item.id)) : 0
+    const nextIds = (parsed as Database).nextIds
+      ? (parsed as Database).nextIds
+      : {
+          opening: getMaxId((parsed as Database).openings) + 1,
+          position: getMaxId((parsed as Database).positions) + 1,
+          review: getMaxId((parsed as Database).reviews) + 1,
+          stats: getMaxId((parsed as Database).stats) + 1
+        }
+    db = {
+      openings: (parsed as Database).openings,
+      positions: (parsed as Database).positions,
+      reviews: (parsed as Database).reviews,
+      stats: (parsed as Database).stats,
+      nextIds
+    }
+    saveDatabase()
+    return { success: true }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to parse backup'
+    return { success: false, error: message }
+  }
 }
 
 function seedInitialData(): void {

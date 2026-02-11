@@ -36,6 +36,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateStats: (positionId: number, correct: boolean) =>
     ipcRenderer.invoke('db:updateStats', positionId, correct),
   getAllStats: () => ipcRenderer.invoke('db:getAllStats'),
+  exportToFile: () => ipcRenderer.invoke('db:exportToFile'),
+  importFromFile: () => ipcRenderer.invoke('db:importFromFile'),
 
   // AI Coach (LLM)
   coachChat: (messages: CoachChatMessage[]) => ipcRenderer.invoke('llm:chat', messages),
@@ -45,6 +47,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('llm:saveSettings', settings),
   buildCoachPrompt: (analysisType: string, context: CoachContext) =>
     ipcRenderer.invoke('llm:buildPrompt', analysisType, context),
+  explainBlunder: (context: {
+    fen: string
+    playedMove: string
+    bestMove: string
+    evalDelta: number
+    quality: 'blunder' | 'mistake' | 'inaccuracy'
+    playerColor: 'white' | 'black'
+  }) => ipcRenderer.invoke('llm:explainBlunder', context),
 
   // Stockfish Analysis
   analyzePosition: (fen: string, depth?: number) =>
@@ -103,12 +113,22 @@ export interface ElectronAPI {
   getStats: (positionId: number) => Promise<Stats | undefined>
   updateStats: (positionId: number, correct: boolean) => Promise<boolean>
   getAllStats: () => Promise<Stats[]>
+  exportToFile: () => Promise<{ canceled: boolean; path?: string }>
+  importFromFile: () => Promise<{ canceled: boolean; success?: boolean; error?: string }>
   // AI Coach
   coachChat: (messages: CoachChatMessage[]) => Promise<CoachChatResponse>
   checkCoachStatus: () => Promise<CoachStatusResponse>
   getCoachSettings: () => Promise<CoachSettings>
   saveCoachSettings: (settings: Partial<CoachSettings>) => Promise<CoachSettings>
   buildCoachPrompt: (analysisType: string, context: CoachContext) => Promise<string>
+  explainBlunder: (context: {
+    fen: string
+    playedMove: string
+    bestMove: string
+    evalDelta: number
+    quality: 'blunder' | 'mistake' | 'inaccuracy'
+    playerColor: 'white' | 'black'
+  }) => Promise<CoachChatResponse>
   // Stockfish Analysis
   analyzePosition: (fen: string, depth?: number) => Promise<StockfishAnalysis>
   analyzeMoveQuality: (fenBefore: string, fenAfter: string, depth?: number) => Promise<MoveQualityAnalysis>
@@ -143,7 +163,14 @@ export interface Review {
 export interface ReviewWithPosition extends Review {
   fen: string
   move_san: string | null
-  explanation: string | null
+  explanation: PositionExplanation | null
+}
+
+export interface PositionExplanation {
+  coach: string
+  insight?: string
+  concept?: string
+  warning?: string
 }
 
 export interface Stats {

@@ -23,12 +23,12 @@ export default function StatsPanel() {
         const allStats = await window.electronAPI.getAllStats()
 
         // Get review data for mastery levels
-        const reviewPromises = allStats.map((s) => window.electronAPI.getReview(s.position_id))
+        const reviewPromises = allStats.map((s: Stats) => window.electronAPI.getReview(s.position_id))
         const reviewResults = await Promise.all(reviewPromises)
 
         // Combine stats with position data and mastery
         const enrichedStats = allStats
-          .map((s, i) => {
+          .map((s: Stats, i: number) => {
             const position = positions.find((p) => p.id === s.position_id)
             const review = reviewResults[i]
             const mastery = review
@@ -40,7 +40,7 @@ export default function StatsPanel() {
               mastery
             }
           })
-          .filter((s) => !currentOpening || s.position?.opening_id === currentOpening.id)
+          .filter((s: PositionStats) => !currentOpening || s.position?.opening_id === currentOpening.id)
 
         setStats(enrichedStats)
         // setReviews(reviewResults.filter((r) => r) as typeof reviews)

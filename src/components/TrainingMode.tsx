@@ -44,17 +44,33 @@ export default function TrainingMode() {
     if (!moveSan) return null
     // For training, we want to show the position where the user needs to find the move
     // The review.fen is the position AFTER the move, so we need to reverse it
-    // This is a simplified approach - in a real app you'd store parent FEN
+    // We do this by making the move first (to establish it in history), then undoing it
     const game = new Chess(fen)
     try {
+      // First, we need to go back one move to establish history
+      // Since we're at the position after the move, we need to undo the move
+      // But a Chess object from FEN has no history, so we work backwards:
+      // 1. Make the move (this establishes it in history)
+      // 2. Then undo it to get the parent position
+      // Actually, we can't do this because we're already at the position after the move
+      // Instead, we need to create a new game and make moves up to the parent
+      // For now, we'll use a simpler approach: try to undo (will fail if no history)
+      // and fall back to null, which will use review.fen as fallback
+      // This is a limitation - ideally we'd store parent FEN in the database
       game.undo()
       return game.fen()
     } catch {
+      // If undo fails (no move history), we can't determine the parent position
+      // This happens when FEN is loaded directly without move history
+      // The fallback in the useEffect will use review.fen (position after move)
+      // which is not ideal but better than crashing
       return null
     }
   }, [])
 
-  const currentReview = dueReviews[currentReviewIndex]
+  const currentReview = dueReviews.length > 0 && currentReviewIndex < dueReviews.length
+    ? dueReviews[currentReviewIndex]
+    : null
 
   // Load due reviews when component mounts or opening changes
   useEffect(() => {
@@ -67,6 +83,7 @@ export default function TrainingMode() {
   useEffect(() => {
     if (dueReviews.length > 0 && currentReviewIndex < dueReviews.length) {
       const review = dueReviews[currentReviewIndex]
+      if (!review) return
       // Load the parent position (we want to show the position BEFORE the move)
       const parentFen = getParentFen(review.fen, review.move_san)
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -306,6 +323,11 @@ export default function TrainingMode() {
             }}
             customDarkSquareStyle={{ backgroundColor: '#b58863' }}
             customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}
+            customNotationStyle={{
+              fontWeight: 700,
+              color: 'rgba(0, 0, 0, 0.85)',
+              fontSize: '12px'
+            }}
             animationDuration={200}
             arePiecesDraggable={state === 'question'}
           />

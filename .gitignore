@@ -1,10 +1,12 @@
 # Dependencies
 node_modules/
+venv/
 
 # Build outputs
 dist/
 dist-electron/
 release/
+*.tsbuildinfo
 
 # Database
 *.db

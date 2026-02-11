@@ -114,6 +114,8 @@ interface AppState {
   // Openings
   openings: Opening[]
   currentOpening: Opening | null
+  openingsLoading: boolean
+  openingsError: string | null
   loadOpenings: () => Promise<void>
   selectOpening: (opening: Opening) => Promise<void>
 
@@ -184,6 +186,7 @@ interface AppState {
   setMoveAnalysisEnabled: (enabled: boolean) => void
   analyzeMoveQuality: (fenBefore: string, fenAfter: string, move: { from: string; to: string; san: string }) => Promise<void>
   clearToast: () => void
+  showToast: (type: ToastMessage['type'], message: string) => void
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -205,7 +208,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   makeMove: (from, to, promotion) => {
-    const { game, moveAnalysisEnabled, fen: fenBefore, aiEnabled, aiColor } = get()
+    const { game, moveAnalysisEnabled, fen: fenBefore } = get()
     try {
       const move = game.move({ from, to, promotion: promotion || 'q' })
       if (move) {
@@ -213,19 +216,15 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ fen: fenAfter, game })
         get().addToHistory(move.san)
         
-        // Trigger async analysis if enabled
-        // Only analyze player moves (not AI moves)
+        // Trigger async analysis if enabled (both human and AI moves)
         if (moveAnalysisEnabled) {
-          const currentTurn = game.turn() === 'w' ? 'black' : 'white' // Who just moved
-          const shouldAnalyze = !aiEnabled || currentTurn !== aiColor
-          
-          if (shouldAnalyze) {
-            get().analyzeMoveQuality(fenBefore, fenAfter, {
-              from,
-              to,
-              san: move.san
-            })
-          }
+          get().analyzeMoveQuality(fenBefore, fenAfter, {
+            from,
+            to,
+            san: move.san
+          }).catch((error) => {
+            console.error('Move analysis failed:', error)
+          })
         }
         
         return true
@@ -257,20 +256,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Openings
   openings: [],
   currentOpening: null,
+  openingsLoading: false,
+  openingsError: null,
 
   loadOpenings: async () => {
+    set({ openingsLoading: true, openingsError: null })
     try {
       const openings = await window.electronAPI.getOpenings()
-      set({ openings })
+      set({ openings, openingsLoading: false, openingsError: null })
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load openings'
       console.error('Failed to load openings:', error)
+      set({ openingsLoading: false, openingsError: message })
     }
   },
 
   selectOpening: async (opening) => {
     try {
       const positions = await window.electronAPI.getPositions(opening.id)
-      const rootPosition = positions.find((p) => p.parent_id === null) || null
+      const rootPosition = positions.find((p: Position) => p.parent_id === null) || null
 
       set({
         currentOpening: opening,
@@ -514,6 +518,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       currentState.makeMove(from, to, promotion)
     } catch (error) {
       console.error('AI move failed:', error)
+
+      // Fallback: make a random legal move so the AI always responds.
+      const fallbackState = get()
+      const fallbackTurn = fallbackState.game.turn() === 'w' ? 'white' : 'black'
+      if (
+        fallbackState.aiEnabled &&
+        fallbackTurn === fallbackState.aiColor &&
+        !fallbackState.game.isGameOver()
+      ) {
+        const legalMoves = fallbackState.game.moves({ verbose: true })
+        if (legalMoves.length > 0) {
+          const randomMove = legalMoves[Math.floor(Math.random() * legalMoves.length)]
+          console.warn('Using fallback random AI move:', randomMove)
+          fallbackState.makeMove(randomMove.from, randomMove.to, randomMove.promotion)
+        }
+      }
     } finally {
       set({ aiThinking: false })
     }
@@ -525,7 +545,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   coachConnected: false,
   coachPanelOpen: false,
   coachSettings: {
-    endpoint: 'http://192.168.1.155:1234/v1/chat/completions',
+    endpoint: 'http://192.168.68.60:1234/v1/chat/completions',
     model: 'local-model'
   },
   coachHighlightSquares: [],
@@ -572,6 +592,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   clearToast: () => set({ toastMessage: null, currentMoveAnalysis: null }),
 
+  showToast: (type, message) =>
+    set({
+      toastMessage: { type, message, id: `toast-${Date.now()}` }
+    }),
+
   analyzeMoveQuality: async (fenBefore, fenAfter, move) => {
     try {
       const result = await window.electronAPI.analyzeMoveQuality(fenBefore, fenAfter, 15)
@@ -589,38 +614,111 @@ export const useAppStore = create<AppState>((set, get) => ({
         evalDelta: result.evalDelta
       }
       
-      // Only show toast and highlight for suboptimal moves
+      // Helper function to format evaluation for display
+      const formatEvaluation = (evaluation: { type: 'cp' | 'mate'; value: number }): string => {
+        if (evaluation.type === 'mate') {
+          if (evaluation.value > 0) {
+            return `Mate in ${evaluation.value}`
+          } else {
+            return `Mated in ${Math.abs(evaluation.value)}`
+          }
+        } else {
+          // Convert centipawns to pawns
+          const pawns = evaluation.value / 100
+          const sign = pawns >= 0 ? '+' : ''
+          return `${sign}${pawns.toFixed(1)}`
+        }
+      }
+      
+      // Determine player color for perspective
+      const state = get()
+      let playerColor: 'white' | 'black' = 'white'
+      if (state.aiEnabled) {
+        playerColor = state.aiColor === 'white' ? 'black' : 'white'
+      } else if (state.currentOpening) {
+        playerColor = state.currentOpening.color
+      }
+      
+      // Convert evaluation to player's perspective
+      // evalAfter is from the opponent's perspective (since it's now their turn)
+      // Flip it to show from the player's perspective
+      let displayEval = result.evalAfter
+      if (displayEval.type === 'cp') {
+        displayEval = { type: 'cp', value: -displayEval.value }
+      } else {
+        displayEval = { type: 'mate', value: -displayEval.value }
+      }
+      
+      // Always show toast with engine rating
+      let toastMessage: ToastMessage
+      
       if (result.quality !== 'good') {
+        // For suboptimal moves, show quality warning with rating
         const qualityLabels: Record<'blunder' | 'mistake' | 'inaccuracy', string> = {
           blunder: 'Blunder',
           mistake: 'Mistake',
           inaccuracy: 'Inaccuracy'
         }
         
-        // Type assertion since we've already checked result.quality !== 'good'
         const quality = result.quality as 'blunder' | 'mistake' | 'inaccuracy'
+        const evalStr = formatEvaluation(displayEval)
         
-        const toastMessage: ToastMessage = {
+        toastMessage = {
           type: quality,
-          message: `${qualityLabels[quality]}: ${move.san} - Best was ${result.bestMoveSan}`,
+          message: `${qualityLabels[quality]}: ${move.san} (${evalStr}) - Best: ${result.bestMoveSan}`,
           id: `toast-${Date.now()}`
         }
-        
-        set({
-          currentMoveAnalysis: moveAnalysis,
-          moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis],
-          toastMessage
-        })
-        
-        // Auto-open coach panel for blunders to show explanation
-        if (result.quality === 'blunder' && !get().coachPanelOpen) {
+      } else {
+        // For good moves, show just the rating
+        const evalStr = formatEvaluation(displayEval)
+        toastMessage = {
+          type: 'info',
+          message: `${move.san}: ${evalStr}`,
+          id: `toast-${Date.now()}`
+        }
+      }
+      
+      set({
+        currentMoveAnalysis: moveAnalysis,
+        moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis],
+        toastMessage
+      })
+      
+      // Only trigger LLM/coach for the human player's suboptimal moves (not AI's)
+      const moveMadeBy = fenBefore.split(' ')[1] === 'w' ? 'white' : 'black'
+      const isHumanMove = moveMadeBy === playerColor
+      if (
+        isHumanMove &&
+        (result.quality === 'blunder' || result.quality === 'mistake' || result.quality === 'inaccuracy')
+      ) {
+        if (result.quality === 'blunder' && !state.coachPanelOpen) {
           set({ coachPanelOpen: true })
         }
-      } else {
-        set({
-          currentMoveAnalysis: moveAnalysis,
-          moveAnalysisHistory: [...get().moveAnalysisHistory, moveAnalysis]
-        })
+        if (state.coachConnected) {
+          window.electronAPI.explainBlunder({
+            fen: fenBefore,
+            playedMove: move.san,
+            bestMove: result.bestMoveSan,
+            evalDelta: result.evalDelta,
+            quality: result.quality,
+            playerColor
+          }).then((response: { success: boolean; content?: string; error?: string }) => {
+            if (response.success && response.content) {
+              const assistantMessage: CoachMessage = {
+                id: `assistant-${Date.now()}`,
+                role: 'assistant',
+                content: response.content,
+                timestamp: Date.now(),
+                analysisType: 'mistakes'
+              }
+              set((state) => ({
+                coachMessages: [...state.coachMessages, assistantMessage]
+              }))
+            }
+          }).catch((error: unknown) => {
+            console.error('Failed to get move explanation:', error)
+          })
+        }
       }
     } catch (error) {
       console.error('Move analysis failed:', error)

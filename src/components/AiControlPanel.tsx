@@ -55,6 +55,28 @@ export default function AiControlPanel() {
         </button>
       </div>
 
+      {/* Move Analysis Toggle - Always visible */}
+      <div className="mb-4 pt-3 border-t border-surface-600">
+        <label className="flex items-center justify-between cursor-pointer">
+          <div className="flex flex-col">
+            <span className="text-sm text-gray-300">Analyze my moves</span>
+            <span className="text-xs text-gray-500">Get feedback on blunders & mistakes</span>
+          </div>
+          <button
+            onClick={() => setMoveAnalysisEnabled(!moveAnalysisEnabled)}
+            className={`relative w-12 h-6 rounded-full transition-colors ${
+              moveAnalysisEnabled ? 'bg-accent-gold' : 'bg-surface-600'
+            }`}
+          >
+            <span
+              className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
+                moveAnalysisEnabled ? 'translate-x-6' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </label>
+      </div>
+
       {aiEnabled && (
         <div className="space-y-4">
           {/* AI thinking indicator */}
@@ -145,28 +167,6 @@ export default function AiControlPanel() {
                 ? 'Always plays the best move'
                 : `Randomly selects from top ${aiVariety} moves`}
             </p>
-          </div>
-
-          {/* Move Analysis Toggle */}
-          <div className="pt-3 border-t border-surface-600">
-            <label className="flex items-center justify-between cursor-pointer">
-              <div className="flex flex-col">
-                <span className="text-sm text-gray-300">Analyze my moves</span>
-                <span className="text-xs text-gray-500">Get feedback on blunders & mistakes</span>
-              </div>
-              <button
-                onClick={() => setMoveAnalysisEnabled(!moveAnalysisEnabled)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${
-                  moveAnalysisEnabled ? 'bg-accent-gold' : 'bg-surface-600'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${
-                    moveAnalysisEnabled ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </label>
           </div>
 
           {/* Hint about board orientation */}

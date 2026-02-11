@@ -6,7 +6,12 @@ import {
   BarChart3,
   ChevronRight,
   ChevronLeft,
-  Crown
+  Crown,
+  Loader2,
+  AlertCircle,
+  RotateCcw,
+  Download,
+  Upload
 } from 'lucide-react'
 
 const navItems: { id: ViewType; label: string; icon: typeof BookOpen }[] = [
@@ -24,8 +29,31 @@ export default function Sidebar() {
     currentOpening,
     selectOpening,
     sidebarCollapsed,
-    toggleSidebar
+    toggleSidebar,
+    openingsLoading,
+    openingsError,
+    loadOpenings,
+    showToast
   } = useAppStore()
+
+  const handleExportBackup = async () => {
+    const result = await window.electronAPI.exportToFile()
+    if (!result.canceled && result.path) {
+      showToast('info', 'Backup saved')
+    }
+  }
+
+  const handleImportBackup = async () => {
+    if (!window.confirm('Importing will replace all current data. Continue?')) return
+    const result = await window.electronAPI.importFromFile()
+    if (result.canceled) return
+    if (result.success) {
+      showToast('info', 'Backup restored')
+      loadOpenings()
+    } else {
+      showToast('info', result.error ?? 'Import failed')
+    }
+  }
 
   // Collapsed state - show icon-only navigation
   if (sidebarCollapsed) {
@@ -116,6 +144,26 @@ export default function Sidebar() {
           Openings
         </h3>
         <div className="flex-1 scrollable-panel px-3 pb-3 min-h-0">
+          {openingsLoading ? (
+            <div className="flex items-center gap-2 py-4 text-gray-400">
+              <Loader2 size={18} className="animate-spin flex-shrink-0" />
+              <span className="text-sm">Loading openings…</span>
+            </div>
+          ) : openingsError ? (
+            <div className="py-4 space-y-3">
+              <div className="flex items-start gap-2 text-red-400">
+                <AlertCircle size={18} className="flex-shrink-0 mt-0.5" />
+                <span className="text-sm">{openingsError}</span>
+              </div>
+              <button
+                onClick={() => loadOpenings()}
+                className="flex items-center gap-2 px-3 py-2 bg-surface-600 hover:bg-surface-500 text-gray-300 rounded-lg text-sm font-medium transition-colors"
+              >
+                <RotateCcw size={14} />
+                Retry
+              </button>
+            </div>
+          ) : (
           <ul className="space-y-2">
             {openings.map((opening) => {
               const isSelected = currentOpening?.id === opening.id
@@ -174,14 +222,31 @@ export default function Sidebar() {
               )
             })}
           </ul>
+          )}
         </div>
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-surface-700">
-        <div className="text-center">
-          <p className="text-xs text-gray-600">Chess Opening Trainer v1.0</p>
+      <div className="p-3 border-t border-surface-700 space-y-2">
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportBackup}
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-surface-700 hover:bg-surface-600 text-gray-300 rounded-lg text-xs font-medium transition-colors"
+            title="Export backup"
+          >
+            <Download size={14} />
+            Export
+          </button>
+          <button
+            onClick={handleImportBackup}
+            className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 bg-surface-700 hover:bg-surface-600 text-gray-300 rounded-lg text-xs font-medium transition-colors"
+            title="Import backup"
+          >
+            <Upload size={14} />
+            Import
+          </button>
         </div>
+        <p className="text-center text-xs text-gray-600">Chess Opening Trainer v1.0</p>
       </div>
     </aside>
   )

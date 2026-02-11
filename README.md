@@ -80,6 +80,17 @@ npm run preview
 
 For the **LLM Coach**, install [LM Studio](https://lmstudio.ai/), load a model, and start the local server. The app uses the OpenAI-compatible API at `http://localhost:1234` by default (configurable in the coach panel).
 
+### Stockfish (native engine for analysis)
+
+Position analysis and move-quality checks use a **native Stockfish** executable (separate from the in-browser `stockfish.js` WASM). To enable it:
+
+1. Download a Stockfish build for your OS from [stockfishchess.org](https://stockfishchess.org/download/) (e.g. Windows: extract the ZIP and get `stockfish.exe`).
+2. In the project root, create a folder named `stockfish` and put the executable inside it:
+   - **Windows:** `cursor_chess\stockfish\stockfish.exe`
+   - **macOS/Linux:** `cursor_chess/stockfish/stockfish` (and ensure it’s executable: `chmod +x stockfish`).
+
+Alternatively, set the `STOCKFISH_PATH` environment variable to the full path of your Stockfish executable. If Stockfish isn’t installed, the AI Coach will still work for chat; only “analyze position” and move-quality features will show an error.
+
 ## Keyboard Shortcuts
 
 | Key | Action                     |

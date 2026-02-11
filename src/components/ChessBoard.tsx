@@ -57,7 +57,14 @@ export default function ChessBoard({
 
   const [selectedSquare, setSelectedSquare] = useState<Square | null>(null)
   const [legalMoves, setLegalMoves] = useState<string[]>([])
-  const [lastMove, setLastMove] = useState<{ from: string; to: string } | null>(null)
+  const aiMoveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Derive last move from game history so both player and AI moves are highlighted
+  const lastMove = useMemo(() => {
+    const history = game.history({ verbose: true })
+    const last = history.length ? history[history.length - 1] : null
+    return last ? { from: last.from, to: last.to } : null
+  }, [fen, game])
 
   // Save board size to localStorage when it changes
   useEffect(() => {
@@ -114,6 +121,10 @@ export default function ChessBoard({
       if (handleResizeEndRef.current) {
         document.removeEventListener('mouseup', handleResizeEndRef.current)
       }
+      // Clear AI move timeout on unmount
+      if (aiMoveTimeoutRef.current) {
+        clearTimeout(aiMoveTimeoutRef.current)
+      }
     }
   }, [handleResizeMove])
 
@@ -121,26 +132,19 @@ export default function ChessBoard({
   const currentTurn = game.turn() === 'w' ? 'white' : 'black'
   const isPlayerTurn = !aiEnabled || currentTurn !== aiColor
   const canInteract = interactive && isPlayerTurn && !aiThinking
+  const isGameOver = game.isGameOver()
 
   // Auto-trigger AI move when it becomes AI's turn
   // This handles: AI enabled when it's already AI's turn, game reset with AI playing white, etc.
   useEffect(() => {
-    if (aiEnabled && !aiThinking && currentTurn === aiColor && !game.isGameOver()) {
+    if (aiEnabled && !aiThinking && currentTurn === aiColor && !isGameOver) {
       // Small delay to allow UI to update
       const timer = setTimeout(() => {
         triggerAiMove()
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [aiEnabled, aiThinking, currentTurn, aiColor, triggerAiMove, fen, game])
-
-  // Clear last move highlight when game resets
-  useEffect(() => {
-    if (fen === 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1') {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLastMove(null)
-    }
-  }, [fen])
+  }, [aiEnabled, aiThinking, currentTurn, aiColor, isGameOver, triggerAiMove])
 
   // Handle move via drag and drop or click
   const handleMove = useCallback((from: string, to: string) => {
@@ -153,8 +157,6 @@ export default function ChessBoard({
     // Check if this move leads to a known position in the opening
     const moveSuccess = makeMove(from, to)
     if (moveSuccess) {
-      setLastMove({ from, to })
-
       // Find the child position that matches this move
       const targetFen = useAppStore.getState().fen
       const matchingChild = childPositions.find(child => {
@@ -170,8 +172,13 @@ export default function ChessBoard({
 
       // Trigger AI move after player's move (with a delay for visual feedback)
       if (aiEnabled) {
-        setTimeout(() => {
+        // Clear any existing timeout
+        if (aiMoveTimeoutRef.current) {
+          clearTimeout(aiMoveTimeoutRef.current)
+        }
+        aiMoveTimeoutRef.current = setTimeout(() => {
           triggerAiMove()
+          aiMoveTimeoutRef.current = null
         }, 600)
       }
     }
@@ -348,6 +355,11 @@ export default function ChessBoard({
         }}
         customDarkSquareStyle={{ backgroundColor: '#b58863' }}
         customLightSquareStyle={{ backgroundColor: '#f0d9b5' }}
+        customNotationStyle={{
+          fontWeight: 700,
+          color: 'rgba(0, 0, 0, 0.85)',
+          fontSize: '12px'
+        }}
         animationDuration={200}
         arePiecesDraggable={canInteract}
       />

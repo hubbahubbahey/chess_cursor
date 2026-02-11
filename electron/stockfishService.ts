@@ -4,10 +4,37 @@
  */
 
 import { spawn, ChildProcess } from 'child_process'
+import { app } from 'electron'
 import { Chess } from 'chess.js'
+import path from 'path'
+import os from 'os'
 
-const STOCKFISH_PATH =
-  'C:\\Users\\coldk\\stockfish-windows-x86-64-avx2\\stockfish\\stockfish-windows-x86-64-avx2.exe'
+/**
+ * Get the Stockfish executable path based on the platform.
+ * In development: looks in project root under stockfish/ (e.g. c:\...\cursor_chess\stockfish\stockfish.exe).
+ * When packaged: looks in app resources (e.g. resources/stockfish/stockfish.exe).
+ * Override with STOCKFISH_PATH environment variable.
+ */
+function getStockfishPath(): string {
+  const envPath = process.env.STOCKFISH_PATH
+  if (envPath) {
+    return envPath
+  }
+
+  const platform = os.platform()
+  // In dev, resourcesPath points to node_modules/electron/dist/resources; use app path (project root) instead
+  const appPath = app.isPackaged ? process.resourcesPath : app.getAppPath()
+
+  if (platform === 'win32') {
+    return path.join(appPath, 'stockfish', 'stockfish.exe')
+  } else if (platform === 'darwin') {
+    return path.join(appPath, 'stockfish', 'stockfish')
+  } else {
+    return path.join(appPath, 'stockfish', 'stockfish')
+  }
+}
+
+const STOCKFISH_PATH = getStockfishPath()
 
 export interface StockfishAnalysis {
   evalText: string
@@ -182,11 +209,15 @@ export async function getEngineAnalysis(
         console.warn('Stockfish stderr:', data.toString())
       })
 
-      // Handle process errors
-      stockfish.on('error', (error) => {
+      // Handle process errors (e.g. ENOENT = executable not found)
+      stockfish.on('error', (error: NodeJS.ErrnoException) => {
         cleanup()
         clearTimeout(timeoutId)
-        reject(new Error(`Failed to start Stockfish: ${error.message}`))
+        const hint =
+          error.code === 'ENOENT'
+            ? ` Place Stockfish in a "stockfish" folder (e.g. ${path.join(app.getAppPath(), 'stockfish', os.platform() === 'win32' ? 'stockfish.exe' : 'stockfish')}) or set STOCKFISH_PATH.`
+            : ''
+        reject(new Error(`Failed to start Stockfish: ${error.message}.${hint}`))
       })
 
       stockfish.on('exit', (code) => {

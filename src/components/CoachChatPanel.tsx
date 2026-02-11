@@ -10,7 +10,6 @@ export default function CoachChatPanel() {
     coachMessages,
     coachLoading,
     coachConnected,
-    coachPanelOpen,
     askCoach
   } = useAppStore()
 
@@ -29,10 +28,6 @@ export default function CoachChatPanel() {
       askCoach('custom', customQuestion.trim())
       setCustomQuestion('')
     }
-  }
-
-  if (!coachPanelOpen) {
-    return null
   }
 
   return (
@@ -103,6 +98,7 @@ interface MessageBubbleProps {
 function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === 'user'
   const { fen, setCoachHighlightSquares, deleteCoachMessage } = useAppStore()
+  const highlightTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Patterns for chess notation detection
   const sanPattern =
@@ -111,14 +107,28 @@ function MessageBubble({ message }: MessageBubbleProps) {
   const piecePattern =
     /\b(pawn|knight|bishop|rook|queen|king)\s+(?:on\s+)?([a-h][1-8])\b|\b([a-h][1-8])\s+(pawn|knight|bishop|rook|queen|king)\b/gi
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Handle click on chess notation
   const handleNotationClick = (notation: string) => {
     const squares = parseChessNotation(notation, fen)
     if (squares.length > 0) {
+      // Clear any existing timeout
+      if (highlightTimeoutRef.current) {
+        clearTimeout(highlightTimeoutRef.current)
+      }
       setCoachHighlightSquares(squares)
       // Auto-clear after 5 seconds
-      setTimeout(() => {
+      highlightTimeoutRef.current = setTimeout(() => {
         setCoachHighlightSquares([])
+        highlightTimeoutRef.current = null
       }, 5000)
     }
   }

@@ -3,41 +3,73 @@
  */
 
 // Import worker using Vite's worker syntax
-import StockfishWorker from 'stockfish.js/stockfish.wasm.js?worker'
+import StockfishWasmWorker from 'stockfish.js/stockfish.wasm.js?worker'
+import StockfishJsWorker from 'stockfish.js/stockfish.js?worker'
 
 let engine: Worker | null = null
 let isReady = false
 let currentResolve: ((move: string) => void) | null = null
 let currentReject: ((error: Error) => void) | null = null
 let moveTimeout: NodeJS.Timeout | null = null
+let initTimeout: NodeJS.Timeout | null = null
 let topMovesResolve: ((moves: string[]) => void) | null = null
 let topMovesReject: ((error: Error) => void) | null = null
 const topMoves: Map<number, string> = new Map()
 let expectedMultipv: number = 0
+let initPromise: Promise<void> | null = null
+
+function createStockfishWorker(): Worker {
+  try {
+    return new StockfishWasmWorker()
+  } catch (wasmError) {
+    console.warn('Failed to create WASM Stockfish worker, falling back to JS worker:', wasmError)
+    return new StockfishJsWorker()
+  }
+}
 
 /**
  * Initialize the Stockfish engine
  */
 export function initEngine(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (engine && isReady) {
-      resolve()
-      return
-    }
+  if (engine && isReady) {
+    return Promise.resolve()
+  }
 
+  if (initPromise) {
+    return initPromise
+  }
+
+  initPromise = new Promise((resolve, reject) => {
     try {
-      // Create worker using the imported worker class
-      engine = new StockfishWorker()
+      // Reset a stale worker instance before creating a new one
+      if (engine) {
+        try {
+          engine.terminate()
+        } catch {
+          // Ignore terminate errors
+        }
+        engine = null
+      }
 
-      if (engine) engine.onmessage = (e: MessageEvent) => {
-        const message = e.data as string
+      isReady = false
+      engine = createStockfishWorker()
+      let settled = false
+
+      engine.onmessage = (e: MessageEvent) => {
+        const message = String(e.data)
 
         // Handle UCI protocol responses
         if (message === 'uciok') {
           // Engine is ready after UCI initialization
           engine?.postMessage('isready')
-        } else if (message === 'readyok') {
+        } else if (message === 'readyok' && !settled) {
+          settled = true
           isReady = true
+          // Clear initialization timeout since engine is ready
+          if (initTimeout) {
+            clearTimeout(initTimeout)
+            initTimeout = null
+          }
           resolve()
         } else if (message.startsWith('info') && topMovesResolve) {
           // Parse multipv info lines: "info depth X multipv Y score cp X pv move1 move2 ..."
@@ -88,7 +120,7 @@ export function initEngine(): Promise<void> {
               }
               console.log(`Successfully collected ${movesArray.length} top moves:`, movesArray)
               // Reset multipv to 1 for future requests
-              engine.postMessage('setoption name multipv value 1')
+              engine?.postMessage('setoption name multipv value 1')
               const savedResolve = topMovesResolve
               topMovesResolve = null
               topMovesReject = null
@@ -102,7 +134,7 @@ export function initEngine(): Promise<void> {
               }
               console.warn('No moves collected from multipv, rejecting')
               // Reset multipv to 1 for future requests
-              engine.postMessage('setoption name multipv value 1')
+              engine?.postMessage('setoption name multipv value 1')
               const savedReject = topMovesReject
               topMovesResolve = null
               topMovesReject = null
@@ -175,20 +207,49 @@ export function initEngine(): Promise<void> {
 
       engine.onerror = (error) => {
         console.error('Stockfish worker error:', error)
+        isReady = false
+        try {
+          engine?.terminate()
+        } catch {
+          // Ignore terminate errors
+        }
+        engine = null
+        if (moveTimeout) {
+          clearTimeout(moveTimeout)
+          moveTimeout = null
+        }
         if (currentReject) {
           currentReject(new Error('Worker error'))
           currentResolve = null
           currentReject = null
         }
-        reject(error)
+        if (topMovesReject) {
+          topMovesReject(new Error('Worker error'))
+          topMovesResolve = null
+          topMovesReject = null
+          topMoves.clear()
+          expectedMultipv = 0
+        }
+        if (!settled) {
+          settled = true
+          reject(error instanceof Error ? error : new Error('Stockfish worker failed'))
+        }
       }
 
       // Initialize UCI protocol
       engine.postMessage('uci')
 
       // Set timeout for initialization
-      setTimeout(() => {
-        if (!isReady) {
+      initTimeout = setTimeout(() => {
+        if (!isReady && !settled) {
+          settled = true
+          initTimeout = null
+          try {
+            engine?.terminate()
+          } catch {
+            // Ignore terminate errors
+          }
+          engine = null
           reject(new Error('Engine initialization timeout'))
         }
       }, 10000)
@@ -197,6 +258,12 @@ export function initEngine(): Promise<void> {
       reject(error)
     }
   })
+
+  initPromise.finally(() => {
+    initPromise = null
+  })
+
+  return initPromise
 }
 
 /**

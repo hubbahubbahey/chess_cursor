@@ -18,7 +18,7 @@ export default function OpeningTree() {
     const childrenMap = new Map<number | null, Position[]>()
     let startPos: Position | null = null
 
-    positions.forEach((pos) => {
+    for (const pos of positions) {
       if (pos.parent_id === null) {
         startPos = pos
       } else {
@@ -26,11 +26,11 @@ export default function OpeningTree() {
         siblings.push(pos)
         childrenMap.set(pos.parent_id, siblings)
       }
-    })
+    }
 
     // Walk the main line (first child at each level)
     const mainLine: Position[] = []
-    let current = startPos
+    let current: Position | null = startPos
     while (current) {
       const children = childrenMap.get(current.id)
       if (children && children.length > 0) {

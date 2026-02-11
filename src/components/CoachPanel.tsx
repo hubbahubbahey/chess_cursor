@@ -154,7 +154,7 @@ export default function CoachPanel() {
             value={tempEndpoint}
             onChange={(e) => setTempEndpoint(e.target.value)}
             className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-accent-gold"
-            placeholder="http://localhost:1234/v1/chat/completions"
+            placeholder="http://192.168.68.60:1234/v1/chat/completions"
           />
           <div className="flex gap-2 mt-3">
             <button

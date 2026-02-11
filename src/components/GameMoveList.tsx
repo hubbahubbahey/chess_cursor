@@ -56,7 +56,7 @@ export default function GameMoveList() {
   const gameResult = getGameResult()
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col max-h-[60vh]">
+    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
       {/* Controls and turn indicator */}
       <div className="p-4 border-b border-surface-700">
         <div className="flex items-center justify-between mb-3">
